@@ -43,3 +43,6 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# Supabase keys are set in Vercel, never committed
+.env*.local

@@ -6,6 +6,7 @@ import { errorClass, hintClass, inputClass, labelClass, primaryButton, secondary
 import { ClockIcon, DownloadIcon, PrintIcon, WhatsAppIcon } from "@/ui/icons";
 import type { CustomerRecord, EntryRecord, SettingsRecord } from "../data/db";
 import type { LedgerRepo, LedgerSnapshot } from "../data/ledgerRepo";
+import { syncLink, type SyncStatus } from "../data/sync";
 import { compareNewestFirst, customerBalance, type EntryType } from "../domain/balance";
 import { AGE_BANDS, openCreditsByCustomer, summariseOpenCredits, type AgeBand } from "../domain/ageing";
 import { formatIndianRupees } from "../domain/money";
@@ -447,6 +448,124 @@ const TONES: { value: ReminderTone; label: string }[] = [
   { value: "formal", label: "Formal" },
 ];
 
+/** Turning sync on, and the link that carries a ledger to another device. */
+function SyncPanel({
+  available,
+  status,
+  shopId,
+  onStart,
+  onStop,
+  onPullNow,
+}: {
+  available: boolean;
+  status: SyncStatus;
+  shopId: string | null;
+  onStart: () => Promise<string>;
+  onStop: () => void;
+  onPullNow: () => Promise<void>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const link = shopId && typeof window !== "undefined" ? syncLink(shopId, window.location.origin) : "";
+
+  if (!available) {
+    return (
+      <div className="rounded-2xl border border-line p-4">
+        <h3 className="text-base font-bold">Sync across my devices</h3>
+        <p className={hintClass}>Sync is not configured for this deployment.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div data-sync-panel className="rounded-2xl border border-line p-4">
+      <h3 className="text-base font-bold">Sync across my devices</h3>
+      {!shopId ? (
+        <>
+          <p className={hintClass}>
+            Turn this on to get a link that opens the same ledger on your phone and your computer. Changes on one show
+            up on the other.
+          </p>
+          <button
+            type="button"
+            data-sync-start
+            disabled={busy}
+            onClick={async () => {
+              setBusy(true);
+              try {
+                await onStart();
+              } finally {
+                setBusy(false);
+              }
+            }}
+            className={`${secondaryButton} mt-3 w-full`}
+          >
+            {busy ? "Turning on…" : "Turn on sync"}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className={hintClass}>Open this link on your other device. It is the same ledger.</p>
+          <input
+            data-sync-link
+            readOnly
+            value={link}
+            onFocus={(e) => e.currentTarget.select()}
+            className={`${inputClass} font-mono text-sm`}
+            aria-label="Sync link"
+          />
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(link);
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 2000);
+                } catch {
+                  setCopied(false);
+                }
+              }}
+              className={`${secondaryButton} flex-1`}
+            >
+              {copied ? "Copied" : "Copy link"}
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                try {
+                  await onPullNow();
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className={`${secondaryButton} flex-1`}
+            >
+              Sync now
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onStop}
+            className="mt-2 min-h-11 w-full rounded-xl border border-line px-3 text-sm font-bold text-muted hover:bg-surface"
+          >
+            Stop syncing on this device
+          </button>
+        </>
+      )}
+      {status.kind === "error" && <p className={errorClass}>{status.message}</p>}
+      {status.kind === "synced" && shopId && <p className="mt-2 text-sm font-semibold text-paid">Up to date.</p>}
+      <p className="mt-3 text-xs text-muted">
+        Anyone with this link can see and change the ledger, so treat it like a key. Payment screenshots stay on the
+        device that took them and do not travel. If the same customer is edited on two devices at once, the last change
+        wins.
+      </p>
+    </div>
+  );
+}
+
 export function SettingsSheet({
   repo,
   settings,
@@ -454,6 +573,7 @@ export function SettingsSheet({
   onClose,
   onChanged,
   onRestored,
+  sync,
 }: {
   repo: LedgerRepo;
   settings: SettingsRecord;
@@ -461,6 +581,14 @@ export function SettingsSheet({
   onClose: () => void;
   onChanged: () => Promise<void>;
   onRestored: (message: string, snapshot: LedgerSnapshot) => void;
+  sync: {
+    available: boolean;
+    status: SyncStatus;
+    shopId: string | null;
+    start: () => Promise<string>;
+    stop: () => void;
+    pullNow: () => Promise<void>;
+  };
 }) {
   const [shopName, setShopName] = useState(settings.shopName);
   const [tone, setTone] = useState<ReminderTone>(settings.reminderTone);
@@ -587,11 +715,21 @@ export function SettingsSheet({
           </p>
         </div>
 
+        <SyncPanel
+          available={sync.available}
+          status={sync.status}
+          shopId={sync.shopId}
+          onStart={sync.start}
+          onStop={sync.stop}
+          onPullNow={sync.pullNow}
+        />
+
         <div className="rounded-2xl border border-line p-4">
           <h3 className="text-base font-bold">Your data</h3>
           <p className={hintClass}>
-            Your ledger is stored only in this browser, on this device. It is not on any server and will not appear on
-            another phone. Clearing browser data erases it, so keep a backup.
+            {sync.shopId
+              ? "This ledger syncs to the shops you have the link for. A backup file is still worth keeping."
+              : "Your ledger is stored only in this browser, on this device. It is not on any server and will not appear on another phone. Clearing browser data erases it, so keep a backup."}
           </p>
           <div className="mt-3 space-y-2">
             <button type="button" onClick={download} className={`${secondaryButton} w-full`}>

@@ -133,7 +133,7 @@ const CustomerRow = memo(function CustomerRow({
 });
 
 export function LedgerApp() {
-  const { state, loadError, reload, repo } = useLedger();
+  const { state, loadError, reload, repo, sync, shopId, startSync, stopSync, pullNow, syncAvailable } = useLedger();
   const [effective, setEffective] = useState<EffectiveDate | null>(null);
   const [sheet, setSheet] = useState<SheetState>({ kind: "none" });
   const [search, setSearch] = useState("");
@@ -271,14 +271,26 @@ export function LedgerApp() {
       <header className="brand-gradient pb-16 text-white">
         <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3 px-4 pt-4">
           <Wordmark subtitle={settings.shopName} />
-          <button
-            type="button"
-            onClick={() => setSheet({ kind: "settings" })}
-            aria-label="Settings and data"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
-          >
-            <SettingsIcon />
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            {shopId && (
+              <span
+                data-sync-status={sync.kind}
+                className={`hidden rounded-full px-2.5 py-1 text-xs font-bold sm:inline ${
+                  sync.kind === "error" ? "bg-due text-white" : "bg-white/15 text-white"
+                }`}
+              >
+                {sync.kind === "working" ? "Syncing…" : sync.kind === "error" ? "Sync problem" : "Synced"}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setSheet({ kind: "settings" })}
+              aria-label="Settings and data"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+            >
+              <SettingsIcon />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -582,6 +594,14 @@ export function LedgerApp() {
           customerCount={state.customers.length}
           onClose={close}
           onChanged={reload}
+          sync={{
+            available: syncAvailable,
+            status: sync,
+            shopId,
+            start: startSync,
+            stop: stopSync,
+            pullNow,
+          }}
           onRestored={async (message, snapshot) => {
             await reload();
             close();

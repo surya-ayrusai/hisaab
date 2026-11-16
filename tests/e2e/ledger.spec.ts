@@ -271,3 +271,29 @@ test("settings: erasing everything is undoable", async ({ page }) => {
   await expect(page.locator("[data-customer]")).toHaveCount(8);
   await expect(page.locator("#total-outstanding")).toContainText("11,820");
 });
+
+test("sync: a page with no shop link stays local and makes no network call", async ({ page }) => {
+  const external: string[] = [];
+  page.on("request", (r) => {
+    const url = r.url();
+    if (!url.startsWith("http://localhost") && !url.startsWith("data:")) external.push(url);
+  });
+  await open(page);
+  await page.click('button[aria-label="Settings and data"]');
+  await page.waitForSelector("[data-sync-panel]");
+
+  // The tester's path: no shop parameter, so nothing is fetched from anywhere.
+  expect(external, `unexpected outbound request(s): ${external.join(", ")}`).toEqual([]);
+  // And the ledger is untouched.
+  await page.click("[role=dialog] button[aria-label=Close]");
+  await expect(page.locator("#total-outstanding")).toContainText("11,820");
+  await expect(page.locator("[data-customer]")).toHaveCount(8);
+  await expect(page.locator("[data-sync-status]")).toHaveCount(0);
+});
+
+test("sync: an unusable shop parameter is ignored rather than breaking the page", async ({ page }) => {
+  await page.goto("/?today=2026-11-15&shop=not-a-uuid");
+  await page.waitForSelector("[data-customer]");
+  await expect(page.locator("#total-outstanding")).toContainText("11,820");
+  await expect(page.locator("[data-sync-status]")).toHaveCount(0);
+});
