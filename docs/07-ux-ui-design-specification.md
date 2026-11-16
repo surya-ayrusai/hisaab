@@ -4,7 +4,7 @@ Project: HISAAB · 16 November 2026 · Status: **as built and deployed** at http
 
 ## 1. Principles
 
-One page. The biggest thing on screen is what the shop is owed. Two verbs only: Credit (goods given) and Payment (money received). Every save can be undone. English throughout, in the plainest words that still say the right thing (owner decision D22).
+One page. The biggest thing on screen is what the shop is owed. Two verbs only: Credit (goods given) and Payment (money received). Every save can be undone. English throughout, in the plainest words that still say the right thing (owner decision D20).
 
 ## 2. Page structure at 375 px
 
@@ -141,13 +141,13 @@ Utility classes carry the rest: `.card` (radius, hairline ring, one-pixel lift),
 
 ## 6. Language
 
-English throughout, by owner decision D22 — interface, buttons, reminder messages, statements and errors. The product name HISAAB is the one exception, kept at the client's request. Amounts use Indian digit grouping (11,820) and the rupee sign; the plain, ungrouped number is what sits inside `[data-balance]` for the automated tester.
+English throughout, by owner decision D20 — interface, buttons, reminder messages, statements and errors. The product name HISAAB is the one exception, kept at the client's request. Amounts use Indian digit grouping (11,820) and the rupee sign; the plain, ungrouped number is what sits inside `[data-balance]` for the automated tester.
 
 ## 7. Decisions taken
 
 | # | Decision |
 | --- | --- |
 | 1 | One scrolling page; the ayrus AI band closes it (ADR-4, amended by D23 — no demo band, the assistant module was removed) |
-| 2 | Button labels are "Credit" and "Payment", in English (D22) |
+| 2 | Button labels are "Credit" and "Payment", in English (D20) |
 | 3 | Palette as in section 4, replacing the starting proposal: deep emerald with a muted gold accent |
 | 4 | Secondary views are bottom sheets, not pages, so the ledger is never more than one tap away |
