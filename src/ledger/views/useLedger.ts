@@ -55,7 +55,7 @@ export function useLedger() {
         await seeding;
         if (!cancelled) await reload();
       } catch {
-        if (!cancelled) setLoadError("Your khata could not be opened in this browser. Private browsing may block storage.");
+        if (!cancelled) setLoadError("Your ledger could not be opened in this browser. Private browsing may block storage.");
       }
     })();
     return () => {

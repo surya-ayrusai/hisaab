@@ -1,6 +1,6 @@
-# Hisaab
+# HISAAB
 
-A simple digital khata for a local shop: who owes what, every entry clear, and a WhatsApp reminder in one tap.
+A simple digital ledger for a local shop: who owes what, every entry clear, and a WhatsApp reminder in one tap.
 
 Status: Phase 2 (foundation). The ledger screens are not built yet. See `HISAAB_PROJECT_STATUS.md`.
 

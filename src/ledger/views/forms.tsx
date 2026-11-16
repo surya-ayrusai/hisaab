@@ -103,7 +103,7 @@ export function AddCustomerSheet({
           {phoneError && <p className={errorClass}>{phoneError}</p>}
           {duplicate && (
             <p className={errorClass}>
-              This number is already in your khata as {duplicate.name}.{" "}
+              This number is already in your ledger as {duplicate.name}.{" "}
               <button type="button" className="underline" onClick={() => onOpenExisting(duplicate)}>
                 Open
               </button>
@@ -157,7 +157,7 @@ export function EntrySheet({
     if (saving) return;
     setError("");
     setShotError("");
-    if (!type) return setError("Choose Udhaar or Payment.");
+    if (!type) return setError("Choose Credit or Payment.");
     if (paise === null) return setError("Enter an amount more than zero.");
     if (!isValidIsoDate(date)) return setError("Choose a valid date.");
     setSaving(true);
@@ -204,7 +204,7 @@ export function EntrySheet({
       </p>
       <form onSubmit={submit} noValidate className="space-y-4" data-form={type === "payment" ? "payment" : "entry"}>
         <div className="flex gap-2" role="group" aria-label="Entry type">
-          {typeButton("credit", "Udhaar (credit given)", "border-due bg-due text-white")}
+          {typeButton("credit", "Credit given", "border-due bg-due text-white")}
           {typeButton("payment", "Payment received", "border-paid bg-paid text-white")}
         </div>
         <div>
@@ -272,7 +272,7 @@ export function EntrySheet({
             : type === "payment"
               ? `Save payment${paise ? ` of ₹${formatIndianRupees(paise)}` : ""}`
               : type === "credit"
-                ? `Save udhaar${paise ? ` of ₹${formatIndianRupees(paise)}` : ""}`
+                ? `Save credit${paise ? ` of ₹${formatIndianRupees(paise)}` : ""}`
                 : "Save"}
         </button>
       </form>

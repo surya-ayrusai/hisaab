@@ -138,12 +138,12 @@ test("TC-L5: no screenshot element without an attachment; bad files are refused"
 test("TC-L6: ?today= sets the default entry date; invalid or absent falls back", async ({ page }) => {
   await open(page, "?today=2026-11-15");
   await expect(page.getByText("Showing as if today is 15 Nov 2026")).toBeVisible();
-  await page.locator('[data-customer="9000000103"]').getByRole("button", { name: "Udhaar" }).click();
+  await page.locator('[data-customer="9000000103"]').getByRole("button", { name: "Credit" }).click();
   await expect(page.locator("#entry-date")).toHaveValue("2026-11-15");
   await page.goto("/?today=2026-02-30");
   await expect(page.locator("#total-outstanding")).toBeVisible();
   await expect(page.getByText("Showing as if today")).toHaveCount(0);
-  await page.locator('[data-customer="9000000103"]').getByRole("button", { name: "Udhaar" }).click();
+  await page.locator('[data-customer="9000000103"]').getByRole("button", { name: "Credit" }).click();
   const deviceToday = await page.evaluate(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -160,16 +160,16 @@ test("core ledger: add customer, credit, undo, cancel, duplicate and invalid pho
   await expect(page.getByText("Enter a 10-digit mobile number")).toBeVisible();
   await page.locator("#customer-phone").fill("9000000101");
   await page.getByRole("button", { name: "Save customer" }).click();
-  await expect(page.getByText("This number is already in your khata")).toBeVisible();
+  await expect(page.getByText("This number is already in your ledger")).toBeVisible();
   await page.locator("#customer-phone").fill("+91 98333 33333");
   await page.getByRole("button", { name: "Save customer" }).click();
   const row = page.locator('[data-customer="9833333333"]');
   await expect(row.locator("[data-balance]")).toHaveText("0");
   await expect(page.locator("[data-customer]").first()).toHaveAttribute("data-customer", "9833333333");
 
-  await row.getByRole("button", { name: "Udhaar" }).click();
+  await row.getByRole("button", { name: "Credit" }).click();
   await page.locator("#entry-amount").fill("250.50");
-  await page.getByRole("button", { name: /Save udhaar/ }).click();
+  await page.getByRole("button", { name: /Save credit/ }).click();
   await expect(row.locator("[data-balance]")).toHaveText("250.50");
   expect(digits(await page.locator("#total-outstanding").textContent())).toBe("12070.50");
   await page.getByRole("button", { name: "Undo" }).click();
@@ -191,4 +191,12 @@ test("no horizontal overflow at 375 px", async ({ page }) => {
   await open(page);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
+});
+
+test("the interface is English only, apart from the app name", async ({ page }) => {
+  await open(page);
+  const text = await page.locator("body").innerText();
+  expect(text).not.toMatch(/udhaar|khata|namaste|jama/i);
+  expect(text).not.toMatch(/[\u0900-\u097F\u0C00-\u0C7F]/);
+  expect(text).toContain("HISAAB");
 });

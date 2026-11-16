@@ -86,7 +86,7 @@ export class LedgerRepo {
     if (!phone) throw new LedgerError("invalid-phone", "Enter a valid 10-digit mobile number.");
     return this.db.transaction("rw", this.db.customers, this.db.settings, async () => {
       if (await this.db.customers.where("phone").equals(phone).first()) {
-        throw new LedgerError("duplicate-phone", "This number is already in your khata.");
+        throw new LedgerError("duplicate-phone", "This number is already in your ledger.");
       }
       const now = new Date().toISOString();
       const record: CustomerRecord = {
@@ -164,7 +164,7 @@ export class LedgerRepo {
     return this.db.shots.toArray();
   }
 
-  /** Removes the bundled sample shop so the shopkeeper can start their own khata. */
+  /** Removes the bundled sample shop so the shopkeeper can start their own ledger. */
   async clearSampleData(): Promise<void> {
     const tables = [this.db.customers, this.db.entries, this.db.settings, this.db.shots];
     await this.db.transaction("rw", tables, async () => {

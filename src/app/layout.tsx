@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hisaab — digital khata",
+  title: "HISAAB — digital ledger",
   description: "Know who owes what, keep every entry clear, and remind customers through WhatsApp in one tap.",
 };
 

@@ -195,16 +195,18 @@ describe("WhatsApp reminder", () => {
     expect(decoded).toContain("Lakshmi Provision Store");
     expect(decoded).toContain("3,470");
   });
-  it("encodes Hindi, Telugu and special characters reversibly", () => {
-    for (const language of ["hi", "te"] as const) {
-      for (const tone of ["friendly", "polite", "formal"] as const) {
-        const special = { ...input, customerName: "R&D #1 + Sons?", language, tone };
-        const url = buildWhatsAppUrl("9000000102", special)!;
-        const query = url.slice(url.indexOf("?text=") + 6);
-        expect(query).not.toMatch(/[ &#+?]/);
-        expect(decodeURIComponent(query)).toBe(buildReminderMessage(special));
-        expect(new URL(url).searchParams.get("text")).toBe(buildReminderMessage(special));
-      }
+  it("encodes special characters reversibly in every tone", () => {
+    for (const tone of ["friendly", "polite", "formal"] as const) {
+      const special = { ...input, customerName: "R&D #1 + Sons?", tone };
+      const url = buildWhatsAppUrl("9000000102", special)!;
+      const query = url.slice(url.indexOf("?text=") + 6);
+      expect(query).not.toMatch(/[ &#+?]/);
+      expect(new URL(url).searchParams.get("text")).toBe(buildReminderMessage(special));
+    }
+  });
+  it("uses English only", () => {
+    for (const tone of ["friendly", "polite", "formal"] as const) {
+      expect(buildReminderMessage({ ...input, tone })).toMatch(/^[\x20-\x7E]+$/);
     }
   });
   it("offers no link without a due or with a bad number", () => {

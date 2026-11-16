@@ -57,7 +57,7 @@ function EntryLine({
       <div className="min-w-0 flex-1">
         <p className={`text-sm font-semibold ${cancelled ? "text-muted line-through" : ""}`}>
           {customerName ? `${customerName} · ` : ""}
-          {isCredit ? "Udhaar" : "Payment"}
+          {isCredit ? "Credit" : "Payment"}
           {entry.kind === "opening" ? " (opening balance)" : ""}
         </p>
         <p className="text-sm text-muted">
@@ -146,7 +146,7 @@ export function LedgerApp() {
   if (loadError) {
     return (
       <main className="mx-auto w-full max-w-[720px] px-4 py-8">
-        <h1 className="text-2xl font-bold">Hisaab</h1>
+        <h1 className="text-2xl font-bold">HISAAB</h1>
         <p className="mt-3 text-base text-due">{loadError}</p>
       </main>
     );
@@ -155,8 +155,8 @@ export function LedgerApp() {
   if (!state || !view || !effective) {
     return (
       <main className="mx-auto w-full max-w-[720px] px-4 py-8" aria-busy="true">
-        <h1 className="text-2xl font-bold">Hisaab</h1>
-        <p className="mt-3 text-base text-muted">Opening your khata…</p>
+        <h1 className="text-2xl font-bold">HISAAB</h1>
+        <p className="mt-3 text-base text-muted">Opening your ledger…</p>
       </main>
     );
   }
@@ -184,7 +184,7 @@ export function LedgerApp() {
       }
       const outcome = await repo.applyImport(plan);
       await reload();
-      const summary = `${outcome.created} customers added, ${outcome.matched} already in khata, ${outcome.added} entries added, ${outcome.skipped} skipped as duplicates, ${outcome.rejected} rejected.`;
+      const summary = `${outcome.created} customers added, ${outcome.matched} already in ledger, ${outcome.added} entries added, ${outcome.skipped} skipped as duplicates, ${outcome.rejected} rejected.`;
       setImportResult({
         tone: "ok",
         text: outcome.mode === "demo-replace" ? `Sample data was replaced by your import. ${summary}` : `Import complete. ${summary}`,
@@ -202,11 +202,11 @@ export function LedgerApp() {
   async function undoImport(snapshot: LedgerSnapshot) {
     await repo.restoreSnapshot(snapshot);
     await reload();
-    setImportResult({ tone: "ok", text: "Import undone. Your khata is as it was before.", rejected: [], warnings: [] });
+    setImportResult({ tone: "ok", text: "Import undone. Your ledger is as it was before.", rejected: [], warnings: [] });
   }
 
   async function clearSample() {
-    if (!window.confirm("Remove the sample customers and start your own khata?")) return;
+    if (!window.confirm("Remove the sample customers and start your own ledger?")) return;
     await repo.clearSampleData();
     await reload();
   }
@@ -219,13 +219,13 @@ export function LedgerApp() {
       <header className="bg-brand text-white">
         <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xl font-bold leading-tight">Hisaab</p>
+            <p className="text-xl font-bold leading-tight">HISAAB</p>
             <p className="truncate text-sm opacity-90">{settings.shopName}</p>
           </div>
         </div>
       </header>
 
-      <main id="khata" className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-10">
+      <main id="ledger" className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-10">
         {effective.overridden && (
           <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-muted ring-1 ring-line">
             Showing as if today is {formatDate(effective.today)}.
@@ -289,7 +289,7 @@ export function LedgerApp() {
           {state.customers.length === 0 ? (
             <div className="mt-4 rounded-2xl bg-white p-6 text-center ring-1 ring-line">
               <p className="text-base font-semibold">No customers yet.</p>
-              <p className="mt-1 text-sm text-muted">Add your first customer to start your khata.</p>
+              <p className="mt-1 text-sm text-muted">Add your first customer to start your ledger.</p>
             </div>
           ) : view.rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted">No customer matches “{search}”.</p>
@@ -333,7 +333,7 @@ export function LedgerApp() {
                         onClick={() => setSheet({ kind: "entry", customerId: customer.id, type: "credit" })}
                         className="min-h-11 flex-1 rounded-xl border-2 border-due px-2 text-sm font-bold text-due"
                       >
-                        Udhaar
+                        Credit
                       </button>
                       <button
                         type="button"
@@ -381,11 +381,11 @@ export function LedgerApp() {
         <section aria-label="Bring in data" className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-line">
           <h2 className="text-base font-bold">Bring in data</h2>
           <p className="mt-1 text-sm text-muted">
-            Paste a khata file (JSON) and press Import. New customers and entries are added. Anything already in your khata
+            Paste a ledger file (JSON) and press Import. New customers and entries are added. Anything already in your ledger
             is skipped, and you can undo the import.
           </p>
           <label htmlFor="import-box" className="sr-only">
-            Khata data in JSON
+            Ledger data in JSON
           </label>
           <textarea
             id="import-box"
@@ -441,7 +441,7 @@ export function LedgerApp() {
         </section>
 
         <p className="mt-4 text-sm text-muted">
-          Your khata is stored only in this browser on this device. It is not saved on any server and will not appear on
+          Your ledger is stored only in this browser on this device. It is not saved on any server and will not appear on
           another phone. Clearing browser data will erase it.
         </p>
       </main>
@@ -472,7 +472,7 @@ export function LedgerApp() {
             await reload();
             close();
             setToast({
-              text: `${entry.type === "credit" ? "Udhaar" : "Payment"} of ₹${formatIndianRupees(entry.amountPaise)} saved.`,
+              text: `${entry.type === "credit" ? "Credit" : "Payment"} of ₹${formatIndianRupees(entry.amountPaise)} saved.`,
               undo: async () => {
                 await repo.cancelEntry(entry.id, "Undone right after saving");
                 await reload();
@@ -553,7 +553,7 @@ function CustomerDetail({
       <p className="text-sm font-semibold text-muted">{balance > 0 ? "Due" : balance < 0 ? "Advance paid by customer" : "Nothing due"}</p>
       <div className="mt-3 flex gap-2">
         <button type="button" onClick={() => onEntry("credit")} className="min-h-12 flex-1 rounded-xl bg-due px-2 text-base font-bold text-white">
-          Udhaar
+          Credit
         </button>
         <button type="button" onClick={() => onEntry("payment")} className="min-h-12 flex-1 rounded-xl bg-paid px-2 text-base font-bold text-white">
           Payment
