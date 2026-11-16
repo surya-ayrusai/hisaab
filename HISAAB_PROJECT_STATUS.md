@@ -4,7 +4,7 @@ Last updated: 16 November 2026 · Demo date: 20 November 2026
 
 ## Current phase
 
-Phases 2, 3, 4a, 4b and **6** are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app. Phase 5 was built and then removed by owner decision D23. Every planned document now exists. The only item left on the plan is the owner's own check on a real phone.
+Phases 2, 3, 4a, 4b and **6** are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app. Phase 5 was built and then removed by owner decision D23. Every planned document now exists. The owner checked it on his own phone on 16 Nov and approved how it looks and feels. Nothing on the build plan is outstanding.
 
 **Known departure from the master prompt:** V3 section 6 requires an Assistant & Ticketing module and section 13 requires tracking its contract. The owner removed it on 16 Nov after being shown that six of the twelve tester checks would fail. Recorded in `docs/11-ai-tester-acceptance-checklist.md`, section B.
 
@@ -44,8 +44,7 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 ## Not built yet
 
-- A try on a real phone. This one needs the owner; everything else in Phase 6 is done and measured.
-- No assistant module, by decision D23.
+- No assistant module, by decision D23. This is a decision, not unfinished work, but it is the one thing that still costs half the tester score.
 
 ## Open points
 
@@ -59,10 +58,9 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 | Day | Target |
 | --- | --- |
-| 17 Nov | Owner's real-phone check, and polish from that feedback |
-| 18–19 Nov | Spare. Held for whatever the phone check turns up |
-| 20 Nov | Final run of every check on the live URL, then the demo |
+| 17–19 Nov | Spare. The build plan is clear; the only open question is D23 (see below) |
+| 20 Nov | Clear the demo browser, final run of every check on the live URL, then the demo |
 
 ## Single most useful next action
 
-Owner opens https://hisaab-ayrus3.vercel.app on a phone and says what feels wrong. Everything that can be checked from here has been; what is left is how it feels in the hand. `docs/14` is the script for the demo itself.
+Decide whether to stand by D23. With three spare days and the module one `git revert` away, this is now a choice rather than a constraint. `docs/14` is the script for the demo itself.
