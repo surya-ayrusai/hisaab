@@ -25,6 +25,9 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 | D17 | No app lock, backup encryption or per-customer delete in this release. |
 | D18 | Owner created Git repo `surya-ayrusai/hisaab`; assistant may create the Vercel project. |
 | D19 | Demo date 20 November 2026. |
+| D20 | English only in the app. The name stays HISAAB (client requirement); all other terms, options and names are in English. Applied 16 Nov: "Credit" and "ledger" replaced the earlier wording and the Hindi and Telugu reminder templates were removed. Scoped to the ledger; see D21. Supersedes the multilingual reminder item in V3 section 3.2 C. |
+| D21 | The assistant keeps Hindi and Telugu replies (owner, 16 Nov 2026): its interface is English, but it answers in the language the visitor writes in, as V3 section 6.1 requires. |
+| D22 | Vercel project `hisaab` under team ayrus3; production at https://hisaab-ayrus3.vercel.app, deploying from `main`. No environment variables, so there is no key to remove. |
 
 ## Standing instructions
 
@@ -43,9 +46,8 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 - Vitest 5.1 needs `@types/node` 22 or newer.
 - `next/font/google` was removed in favour of system fonts: no third-party requests, and Hindi and Telugu fall back to device fonts.
 - Zod was dropped; import validation is hand-written to give per-row reasons.
-- The repository was empty at first clone. Claude cannot push until the Claude GitHub App is installed on the `surya-ayrusai` account.
+- The GitHub App had to be installed on the `surya-ayrusai` account before pushes worked; the Vercel connector separately needed `authorize_team_access` for team ayrus3, which reconnecting alone did not grant.
 - Project instructions cannot be edited by the assistant; only project docs can.
 - Next.js 16 refuses `Date.now()` during prerender in a client component; read the clock in an effect instead.
-- The Vercel connector needed `authorize_team_access` for team ayrus3; reconnecting alone did not grant it.
 - This workspace's proxy blocks `vercel.app`, so deployed checks run through the owner's built-in browser, not from here.
 - Indic text renders correctly on the owner's machine; the test container lacks a Telugu font, which only affects screenshots taken here.
