@@ -4,7 +4,7 @@ Last updated: 16 November 2026 · Demo date: 20 November 2026
 
 ## Current phase
 
-Phases 2, 3, 4a and **4b** are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app. Phase 5 was built and then removed by owner decision D23. Phase 6 hardening remains.
+Phases 2, 3, 4a, 4b and **6** are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app. Phase 5 was built and then removed by owner decision D23. Every planned document now exists. The only item left on the plan is the owner's own check on a real phone.
 
 **Known departure from the master prompt:** V3 section 6 requires an Assistant & Ticketing module and section 13 requires tracking its contract. The owner removed it on 16 Nov after being shown that six of the twelve tester checks would fail. Recorded in `docs/11-ai-tester-acceptance-checklist.md`, section B.
 
@@ -13,7 +13,10 @@ Phases 2, 3, 4a and **4b** are built, tested and **deployed**. Live at https://h
 | Check | Result |
 | --- | --- |
 | Unit tests (`npm test`) | 47 of 47 passed |
-| Browser tests (`npm run test:e2e`, Chrome at 375×812) | 17 of 17 passed |
+| Browser tests (`npm run test:e2e`, Chrome at 375×812) | 21 of 21 passed |
+| Accessibility (axe-core, WCAG 2.1 AA, five screens) | 0 violations |
+| Performance (`node scripts/perf.mjs`, 2,000 customers / 50,000 entries) | 6 of 6 within budget |
+| Horizontal overflow at 320, 768 and 1280 px | None |
 | Type check, lint, production build | Passed |
 | Deployed page checks | All six ledger checks verified on the live URL |
 
@@ -29,7 +32,11 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 **Customer statement** — date range, opening and closing balance, running balance per line, and print or save as PDF through a dedicated print stylesheet.
 
-**Design** — deep emerald brand gradient with a muted gold accent, a card system with hairline borders and soft elevation, avatar initials on customer rows, tabular numerals so amounts line up, and inline SVG icons (no icon library and no remote assets, so the page stays fast and works offline).
+**Design** — deep emerald brand gradient with a muted gold accent, a card system with hairline borders and soft elevation, avatar initials on customer rows, and inline SVG icons (no icon library and no remote assets, so the page stays fast and works offline).
+
+**Typography** — IBM Plex Sans throughout and IBM Plex Serif for the HISAAB wordmark, both served from this origin. Plex was chosen over Plus Jakarta Sans, Source Sans 3 and Inter on the test that matters for a ledger: Plus Jakarta's `1` reads as a lowercase `l` at display size, so `Rs 11,820` looked like `Rs ll,820`. Plex draws an unmistakable 1 and puts every digit on the same advance width, so columns of money line up. The serif is pinned to one weight and subset to capitals — 3 KB for the one word it draws. 48 KB for both files, no third-party request, no layout shift.
+
+**Accessibility** — zero axe violations against WCAG 2.1 AA on all five screens; contrast failures were measured and fixed rather than eyeballed. Sheets move focus inside on open, keep Tab within the panel, and return focus to whatever opened them.
 
 **Branding** — HISAAB in the header; an ayrus AI band closes the page.
 
@@ -37,27 +44,25 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 ## Not built yet
 
-- Phase 6: accessibility pass, tablet and desktop review, performance with many customers, a try on a real phone.
+- A try on a real phone. This one needs the owner; everything else in Phase 6 is done and measured.
 - No assistant module, by decision D23.
-- Documents 10, 12 and 14 (deployment guide, known limitations, demo guide).
 
 ## Open points
 
-1. The deployed demo **in the owner's browser** holds verification entries from today's checks: a ₹100 payment against Ravi Kumar and a customer "Deploy Check". Data is per browser, so every other visitor and the tester still sees the pristine sample. Say the word and I will reset that browser's copy.
+1. The deployed demo **in the owner's browser** holds verification entries from today's checks: a ₹100 payment against Ravi Kumar and a customer "Deploy Check". Data is per browser, so every other visitor and the tester still sees the pristine sample. Settings → **Erase all data**, then reload, restores the clean sample shop.
 2. `#shot-input` appears only after a Payment button is pressed.
 3. No reminder link for a customer with nothing due (owner decision D5).
-4. Documents 04, 05 and 07 still carry outdated "decisions required" sections at their ends.
+4. Documents 04 and 05 still carry outdated "decisions required" sections at their ends. Document 07 has been rewritten.
 5. Backups hold customers and entries but not payment screenshots, which stay in the browser only. Stated in the Settings sheet.
 
 ## Plan to 20 November
 
 | Day | Target |
 | --- | --- |
-| 17 Nov | Accessibility pass, tablet and desktop review, real-phone check |
-| 18 Nov | Performance with many customers, polish from the owner's feedback |
-| 19 Nov | Regression pass, documents 10, 12 and 14 |
-| 20 Nov | Final run of every check on the live URL |
+| 17 Nov | Owner's real-phone check, and polish from that feedback |
+| 18–19 Nov | Spare. Held for whatever the phone check turns up |
+| 20 Nov | Final run of every check on the live URL, then the demo |
 
 ## Single most useful next action
 
-Owner opens https://hisaab-ayrus3.vercel.app on a phone and says what feels wrong; meanwhile Phase 6 hardening starts.
+Owner opens https://hisaab-ayrus3.vercel.app on a phone and says what feels wrong. Everything that can be checked from here has been; what is left is how it feels in the hand. `docs/14` is the script for the demo itself.

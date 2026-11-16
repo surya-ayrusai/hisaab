@@ -1,6 +1,6 @@
 # 09 — Test Strategy and Test Cases
 
-Project: HISAAB · 16 November 2026 · Status: **in force**. Last run at commit `b7cc72f`: 47 unit tests and 17 browser tests, all passing, plus a re-check of all six ledger contract points on the deployed page.
+Project: HISAAB · 16 November 2026 · Status: **in force**. Last run at commit `b2efe29`: 47 unit tests and 21 browser tests, all passing, plus an axe-core audit of five screens (0 violations), a performance run at 2,000 customers and 50,000 entries (6 of 6 within budget), and a re-check of all six ledger contract points on the deployed page.
 
 ## 1. Approach
 
@@ -98,6 +98,10 @@ The working module remains in git history at commit `022315a` if it is ever want
 | TEST-305 | Built files contain no keys or third-party endpoints |
 | TEST-306 | 500 customers and 10,000 entries: home usable |
 | TEST-307 | Storage write failure simulated: clear message, no partial save |
+| TEST-308 | axe-core, WCAG 2.1 AA, on home and all four sheets: zero violations |
+| TEST-309 | A sheet opens from the keyboard, focus moves inside it, 25 tabs never leave it, Escape closes it and focus returns to the opening button |
+| TEST-310 | A payment is recorded with no mouse at all |
+| TEST-311 | `node scripts/perf.mjs` at 2,000 customers and 50,000 entries: every interaction within budget, and the ageing bands sum exactly to `#total-outstanding` |
 
 ## 6. Traceability matrix (initial)
 
