@@ -1,6 +1,6 @@
 /**
  * Ledger database (IndexedDB via Dexie). Lives only in this browser.
- * The Assistant module uses a separate database and never touches this one.
+ * All ledger data lives here, in this browser only.
  */
 
 import Dexie, { type Table } from "dexie";

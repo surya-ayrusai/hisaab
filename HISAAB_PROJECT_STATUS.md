@@ -4,16 +4,18 @@ Last updated: 16 November 2026 · Demo date: 20 November 2026
 
 ## Current phase
 
-Phases 2, 3, 4a and 5 are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app (production, commit `022315a`). Phase 4b and Phase 6 hardening remain.
+Phases 2, 3 and 4a are built, tested and **deployed**. Live at https://hisaab-ayrus3.vercel.app. Phase 5 was built and then removed by owner decision D23. Phase 4b and Phase 6 hardening remain.
+
+**Known departure from the master prompt:** V3 section 6 requires an Assistant & Ticketing module and section 13 requires tracking its contract. The owner removed it on 16 Nov after being shown that six of the twelve tester checks would fail. Recorded in `docs/11-ai-tester-acceptance-checklist.md`, section B.
 
 ## Evidence
 
 | Check | Result |
 | --- | --- |
-| Unit tests (`npm test`) | 61 of 61 passed |
-| Browser tests (`npm run test:e2e`, Chrome at 375×812) | 23 of 23 passed |
+| Unit tests (`npm test`) | 41 of 41 passed |
+| Browser tests (`npm run test:e2e`, Chrome at 375×812) | 12 of 12 passed |
 | Type check, lint, production build | Passed |
-| Deployed page checks | All six ledger checks and all six assistant checks verified on the live URL |
+| Deployed page checks | All six ledger checks verified on the live URL |
 
 Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checklist.md`.
 
@@ -21,14 +23,15 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 **Ledger** — total to collect, customer rows with balances, search and sort, add customer, credit and payment entry, payment screenshot, customer detail with history, cancel an entry, undo after saving, paste import with summary, rejected-row reasons and undo, `?today=`, storage notice, sample shop on first run.
 
-**ayrus AI Assistant** — chat in English, Hindi and Telugu; staff-editable clinic information with versioning; quick replies; booking turned into a ticket with the requested date and time; ticket queue with the four contracted statuses, priority and ageing; a staff reply per ticket; close. No AI provider, no network request, no key. Its own database, separate from the ledger.
-
 **Branding** — HISAAB in the header; an ayrus AI band closes the page.
+
+**Removed** — the Assistant & Ticketing module (decision D23). A browser test asserts none of its selectors remains.
 
 ## Not built yet
 
 - Phase 4b: settings (shop name, reminder tone), backup and restore, replace-import with preview, dues by age, customer statement, opening balance.
 - Phase 6: accessibility pass, tablet and desktop review, performance with many customers, a try on a real phone.
+- No assistant module, by decision D23.
 - Documents 10, 12 and 14 (deployment guide, known limitations, demo guide).
 
 ## Open points

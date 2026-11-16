@@ -45,15 +45,15 @@ No UI component library, charting library, router or analytics.
 
 ### ADR-4 One page, no routes
 
-Home is one scrolling page: ledger first, then import, then a separate "ayrus AI Assistant" section (chat, ticket queue, clinic information), closed by an ayrus AI company band (D16). Customer detail, forms and settings open as sheets over it. Reason: every tester selector stays in the rendered page at the single URL. `?q=` scrolls to the assistant and asks; `?today=` sets the effective date.
+Home is one scrolling page: ledger first, then import, then an ayrus AI company band (D16). The assistant section was removed by decision D23. Customer detail, forms and settings open as sheets over it. Reason: every tester selector stays in the rendered page at the single URL. `?q=` scrolls to the assistant and asks; `?today=` sets the effective date.
 
 ### ADR-5 Corrections by cancel, not delete
 
 Entries carry a status. Cancelled entries remain stored and visible and are excluded by the calculation module.
 
-### ADR-6 Two databases
+### ADR-6 One database (revised 16 Nov 2026)
 
-`hisaab-ledger` and `hisaab-demo` are separate IndexedDB databases. Clearing or importing ledger data cannot touch the demo, and the reverse.
+The application uses a single IndexedDB database, `hisaab-ledger`. The second database existed only for the assistant module, which was removed by owner decision D23. A browser that used the earlier build may still hold an orphaned `hisaab-demo` database; it is unused and harmless, and is left alone rather than deleted without asking.
 
 ## 4. Structure
 

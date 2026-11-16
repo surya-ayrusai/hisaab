@@ -13,7 +13,7 @@ Status values: Not started · In progress · Implemented — not tested · Teste
 | **L** | Local production build, Chrome at 375×812, `npm run test:e2e` — 23 of 23 browser tests passed, plus 61 unit tests. 16 Nov 2026. |
 | **D** | The deployed page at https://hisaab-ayrus3.vercel.app, commit `022315a`, opened in the owner's Chrome and checked through the live DOM. 16 Nov 2026. |
 
-## A. HISAAB ledger contract (six checks, tracked independently)
+## A. HISAAB ledger contract (six checks, tracked independently) — all passing
 
 | ID | Exact contract | Status | Evidence |
 | --- | --- | --- | --- |
@@ -33,16 +33,24 @@ Status values: Not started · In progress · Implemented — not tested · Teste
 | Highest balance | 9000000102 | 9000000102 (3470) |
 | Customers with a balance | 8 | 8 |
 
-## B. ayrus AI Assistant contract (tracked separately)
+## B. Assistant & Ticketing contract — REMOVED BY OWNER DECISION (D23, 16 Nov 2026)
 
-| ID | Exact contract | Status | Evidence |
-| --- | --- | --- | --- |
-| TC-A1 | Input `#chat-input`; send button `#chat-send` | Tested — passed | **D**: both present and working. **L**: Enter also sends; an empty question is ignored rather than producing a blank reply. |
-| TC-A2 | Every bot reply has class `.bot-msg`; the last `.bot-msg` in the DOM is the latest answer | Tested — passed | **D**: after `?q=`, one `.bot-msg` holding the timings answer; after a Telugu question, the last `.bot-msg` was the Telugu answer. **L**: ticket cards repeat the reply text but carry no `bot-msg` class, so the count stays exact. |
-| TC-A3 | `?q=<question>` in the page URL asks that question when the page opens | Tested — passed | **D**: `?q=What are your clinic timings?` produced exactly one reply and one new ticket. **L**: asked once only; a module-level guard prevents a second ask on re-render. |
-| TC-A4 | `#ticket-queue`; one `[data-ticket]` per ticket; `data-status` exactly `answered`, `needs human`, `urgent` or `closed` | Tested — passed | **D**: `#ticket-queue` present with four tickets showing all four exact values. **L**: only those four values ever appear; ticket ids are unique; booking and unknown give `needs human`, emergency gives `urgent`. |
-| TC-A5 | Each ticket has a text area `#staff-reply` and a button `#staff-send` | Tested — passed | **D**: every one of the four tickets contains both controls. **L**: replying in one ticket marks only that ticket answered and leaves the others untouched; the reply survives a reload. |
-| TC-A6 | No-key run: tested with the AI key and with it removed; the lower score counts | Tested — passed | **L**: with a request monitor, loading the page and asking three questions produced no request to any other host. The module contains no AI provider, no API client and no key, and the Vercel project has no environment variables, so the two runs are identical by construction. |
+The module was built, verified on the deployed page, and then removed at the owner's direction. The owner was shown the consequence below before deciding.
+
+**These six checks will fail.** V3 section 6 requires the module and section 13 requires tracking its contract independently; the application no longer provides any of it.
+
+| ID | Exact contract | Status |
+| --- | --- | --- |
+| TC-A1 | Input `#chat-input`; send button `#chat-send` | Will fail — removed by owner decision |
+| TC-A2 | Every bot reply has class `.bot-msg`; the last one is the latest answer | Will fail — removed by owner decision |
+| TC-A3 | `?q=<question>` asks that question when the page opens | Will fail — removed by owner decision |
+| TC-A4 | `#ticket-queue`; `[data-ticket]`; `data-status` of `answered`, `needs human`, `urgent`, `closed` | Will fail — removed by owner decision |
+| TC-A5 | Each ticket has `#staff-reply` and `#staff-send` | Will fail — removed by owner decision |
+| TC-A6 | No-key run; the lower score counts | Not applicable — no AI provider anywhere in the application |
+
+A browser test now asserts that none of these selectors exists, so the removal is deliberate and verified rather than accidental. `?q=` in the URL is ignored and does not disturb the ledger.
+
+The working module is in git history at commit `022315a` if it is ever wanted back.
 
 ## C. Rules for marking a check passed
 

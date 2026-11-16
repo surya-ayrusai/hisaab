@@ -34,10 +34,8 @@ One page. Biggest thing on screen is what the shop is owed. Two verbs only: Udha
 ├─────────────────────────────────────┤
 │ Data on this phone only · Backup    │
 ╞═════════════════════════════════════╡
-│ ayrus AI Assistant                  │  separate section (owner decision D16)
-│ chat · tickets · clinic info        │
-├─────────────────────────────────────┤
-│ ayrus AI                            │  company band
+│ ayrus AI                            │  company band (the assistant section
+│                                     │  was removed by decision D23)
 └─────────────────────────────────────┘
 ```
 
@@ -98,7 +96,7 @@ Five bands with amounts, then customers ordered by oldest unpaid credit. One lin
 
 Shop name, customer, period, opening balance, dated lines, closing balance. "Print or save as PDF".
 
-### 3.9 Assistant & Ticketing Demo
+### 3.9 Assistant & Ticketing Demo — removed by owner decision D23 (16 Nov 2026)
 
 - Chat: message list, quick-reply buttons, `#chat-input`, `#chat-send`.
 - Ticket queue `#ticket-queue`: cards with number, question, status badge, priority, age, requested time, replies, and its own `#staff-reply` and `#staff-send`, plus Close.

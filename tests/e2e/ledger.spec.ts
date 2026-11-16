@@ -193,13 +193,20 @@ test("no horizontal overflow at 375 px", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("the ledger is English only, apart from the app name", async ({ page }) => {
+test("the whole page is English only, apart from the app name", async ({ page }) => {
   await open(page);
-  // The assistant below answers in the visitor's language; the ledger itself does not.
-  for (const area of [page.locator("main#ledger"), page.locator("header"), page.locator("footer")]) {
-    const text = await area.innerText();
-    expect(text).not.toMatch(/udhaar|khata|namaste|jama/i);
-    expect(text).not.toMatch(/[\u0900-\u097F\u0C00-\u0C7F]/);
-  }
+  const text = await page.locator("body").innerText();
+  expect(text).not.toMatch(/udhaar|khata|namaste|jama/i);
+  expect(text).not.toMatch(/[\u0900-\u097F\u0C00-\u0C7F]/);
   await expect(page.locator("header")).toContainText("HISAAB");
+});
+
+test("the page carries no assistant or ticketing markup", async ({ page }) => {
+  await open(page);
+  for (const selector of ["#chat-input", "#chat-send", ".bot-msg", "#ticket-queue", "[data-ticket]", "#staff-reply", "#staff-send"]) {
+    await expect(page.locator(selector)).toHaveCount(0);
+  }
+  // ?q= is no longer handled and must not break the ledger.
+  await page.goto("/?today=2026-11-15&q=What%20are%20your%20timings%3F");
+  await expect(page.locator("#total-outstanding")).toContainText("11,820");
 });

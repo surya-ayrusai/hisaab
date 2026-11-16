@@ -36,6 +36,9 @@ Hisaab is a digital khata for kirana and small shops. First release: a browser-l
 | D17 | No app lock, no backup encryption, no per-customer delete in this release | Security §6 |
 | D18 | Git repository `surya-ayrusai/hisaab` created by the owner; the assistant may create the Vercel project | Deployment |
 | D19 | Demo date: 20 November 2026 | Roadmap |
+| D20 | English only in the app; the name stays HISAAB | Whole interface |
+| D21 | The assistant answered in Hindi and Telugu (superseded by D23) | — |
+| D23 | **Assistant & Ticketing module removed entirely** (16 Nov 2026), after the owner was shown that V3 section 6 requires it and that its six tester checks would fail | AR-001 to AR-014 withdrawn |
 
 Risk recorded for D13: a test dataset containing numbers outside 6–9 would have those customers rejected.
 
@@ -104,9 +107,9 @@ Priority: P0 mandatory, P1 high value, P2 useful.
 | FR-023 | Customer statement | Date range, opening balance, entries in date order, closing balance; print layout that saves as PDF from the browser | P1 | 4 |
 | FR-024 | Opening balance | When adding a customer, optional opening amount and date, stored as a marked opening entry so it is counted once | P1 | 4 |
 
-## 7. Functional requirements — Assistant & Ticketing Demo
+## 7. Functional requirements — Assistant & Ticketing Demo (WITHDRAWN)
 
-Separate module. Clinic wording is allowed here only.
+**Withdrawn by owner decision D23 on 16 November 2026.** AR-001 to AR-014 below are kept for the record only; none is implemented. V3 section 6 still requires this module, so the application knowingly departs from the master prompt here.
 
 | ID | Requirement | Acceptance criteria | Pri |
 | --- | --- | --- | --- |

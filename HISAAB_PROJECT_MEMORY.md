@@ -26,7 +26,8 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 | D18 | Owner created Git repo `surya-ayrusai/hisaab`; assistant may create the Vercel project. |
 | D19 | Demo date 20 November 2026. |
 | D20 | English only in the app. The name stays HISAAB (client requirement); all other terms, options and names are in English. Applied 16 Nov: "Credit" and "ledger" replaced the earlier wording and the Hindi and Telugu reminder templates were removed. Scoped to the ledger; see D21. Supersedes the multilingual reminder item in V3 section 3.2 C. |
-| D21 | The assistant keeps Hindi and Telugu replies (owner, 16 Nov 2026): its interface is English, but it answers in the language the visitor writes in, as V3 section 6.1 requires. |
+| D21 | ~~The assistant keeps Hindi and Telugu replies~~ — superseded by D23. The application is now English only throughout. |
+| D23 | **The Assistant & Ticketing module is removed entirely** (16 Nov 2026). The owner first said its clinic wording came from an old prompt; it comes from V3 section 6, which permits clinic terminology and mandates the module. The owner was shown that removal fails six of the twelve tester checks and chose removal anyway. D21 is superseded. The working module is in git history at commit `022315a`. |
 | D22 | Vercel project `hisaab` under team ayrus3; production at https://hisaab-ayrus3.vercel.app, deploying from `main`. No environment variables, so there is no key to remove. |
 
 ## Standing instructions
@@ -51,3 +52,5 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 - Next.js 16 refuses `Date.now()` during prerender in a client component; read the clock in an effect instead.
 - This workspace's proxy blocks `vercel.app`, so deployed checks run through the owner's built-in browser, not from here.
 - Indic text renders correctly on the owner's machine; the test container lacks a Telugu font, which only affects screenshots taken here.
+- The owner may believe a requirement comes from a superseded prompt when it is in V3; quote the section before acting on a removal.
+- A browser that loaded the 16 Nov build may still hold an unused `hisaab-demo` database. It is left alone rather than deleted without asking.
