@@ -4,7 +4,7 @@
  * The band totals always add up to the shop total outstanding.
  */
 
-import { daysBetween } from "./dates";
+import { daysBetween } from "@/platform/dates";
 import type { LedgerEntryLike } from "./balance";
 
 export const AGE_BANDS = ["0-7", "8-15", "16-30", "31-60", "60+"] as const;

@@ -193,10 +193,13 @@ test("no horizontal overflow at 375 px", async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test("the interface is English only, apart from the app name", async ({ page }) => {
+test("the ledger is English only, apart from the app name", async ({ page }) => {
   await open(page);
-  const text = await page.locator("body").innerText();
-  expect(text).not.toMatch(/udhaar|khata|namaste|jama/i);
-  expect(text).not.toMatch(/[\u0900-\u097F\u0C00-\u0C7F]/);
-  expect(text).toContain("HISAAB");
+  // The assistant below answers in the visitor's language; the ledger itself does not.
+  for (const area of [page.locator("main#ledger"), page.locator("header"), page.locator("footer")]) {
+    const text = await area.innerText();
+    expect(text).not.toMatch(/udhaar|khata|namaste|jama/i);
+    expect(text).not.toMatch(/[\u0900-\u097F\u0C00-\u0C7F]/);
+  }
+  await expect(page.locator("header")).toContainText("HISAAB");
 });

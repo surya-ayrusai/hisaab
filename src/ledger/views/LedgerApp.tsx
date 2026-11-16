@@ -5,7 +5,7 @@ import { Sheet } from "@/ui/Sheet";
 import type { CustomerRecord, EntryRecord } from "../data/db";
 import type { LedgerSnapshot } from "../data/ledgerRepo";
 import { balancesByCustomer, compareNewestFirst, countWithDues, totalOutstanding, type EntryType } from "../domain/balance";
-import { resolveEffectiveDate, type EffectiveDate } from "../domain/dates";
+import { resolveEffectiveDate, type EffectiveDate } from "@/platform/dates";
 import type { Rejection } from "../domain/importPlan";
 import { formatIndianRupees, formatPlainRupees } from "../domain/money";
 import { buildWhatsAppUrl } from "../domain/reminder";

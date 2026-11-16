@@ -3,7 +3,7 @@
  * runs in one database transaction so a failure leaves data unchanged.
  */
 
-import { isValidIsoDate } from "../domain/dates";
+import { isValidIsoDate } from "@/platform/dates";
 import type { EntryType } from "../domain/balance";
 import { entryFingerprint, planImport, type ImportPlan } from "../domain/importPlan";
 import { normalizePhone } from "../domain/phone";

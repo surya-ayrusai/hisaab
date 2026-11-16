@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { formatIndianRupees, formatPlainRupees, parseRupeesToPaise } from "@/ledger/domain/money";
 import { normalizePhone } from "@/ledger/domain/phone";
-import { daysBetween, isValidIsoDate, resolveEffectiveDate } from "@/ledger/domain/dates";
+import { daysBetween, isValidIsoDate, resolveEffectiveDate } from "@/platform/dates";
 import {
   balancesByCustomer,
   compareNewestFirst,

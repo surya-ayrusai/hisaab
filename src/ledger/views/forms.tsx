@@ -6,7 +6,7 @@ import { prepareShot } from "@/platform/image";
 import type { CustomerRecord, EntryRecord } from "../data/db";
 import { LedgerError, type LedgerRepo } from "../data/ledgerRepo";
 import type { EntryType } from "../domain/balance";
-import { isValidIsoDate } from "../domain/dates";
+import { isValidIsoDate } from "@/platform/dates";
 import { formatIndianRupees, parseRupeesToPaise } from "../domain/money";
 import { normalizePhone } from "../domain/phone";
 

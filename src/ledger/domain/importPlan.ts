@@ -6,7 +6,7 @@
  * Imported text is treated as untrusted data: only known fields are copied.
  */
 
-import { isValidIsoDate } from "./dates";
+import { isValidIsoDate } from "@/platform/dates";
 import { parseRupeesToPaise } from "./money";
 import { normalizePhone } from "./phone";
 import type { EntryStatus, EntryType } from "./balance";
