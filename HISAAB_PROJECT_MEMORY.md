@@ -27,7 +27,7 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 | D19 | Demo date 20 November 2026. |
 | D20 | English only in the app. The name stays HISAAB (client requirement); all other terms, options and names are in English. Applied 16 Nov: "Credit" and "ledger" replaced the earlier wording and the Hindi and Telugu reminder templates were removed. Scoped to the ledger; see D21. Supersedes the multilingual reminder item in V3 section 3.2 C. |
 | D21 | ~~The assistant keeps Hindi and Telugu replies~~ — superseded by D23. The application is now English only throughout. |
-| D23 | **The Assistant & Ticketing module is removed entirely** (16 Nov 2026). The owner first said its clinic wording came from an old prompt; it comes from V3 section 6, which permits clinic terminology and mandates the module. The owner was shown that removal fails six of the twelve tester checks and chose removal anyway. D21 is superseded. The working module is in git history at commit `022315a`. |
+| D23 | **The Assistant & Ticketing module is removed entirely** (16 Nov 2026). The owner first said its clinic wording came from an old prompt; it comes from V3 section 6, which permits clinic terminology and mandates the module. The owner was shown that removal fails six of the twelve tester checks and chose removal anyway. D21 is superseded. The working module is in git history at commit `022315a`. **Reaffirmed 16 Nov** after the build plan cleared early: with three spare days the module was a revert away, and the owner was offered a third option — restoring it on a separate `/assistant` route so the ledger home page stayed untouched — and chose to stand by removal. The decision is closed; do not raise it again. |
 | D24 | **Visual identity set 16 Nov 2026**: deep emerald `#0b4f43` brand with a muted gold `#b98a2e` accent, a card system with hairline borders and soft elevation, tabular numerals for all money, and inline SVG icons rather than an icon library. Red is only money owed and green only money received; the brand colour never states an amount. Tokens live in `src/app/globals.css` and are documented in `docs/07`. |
 | D22 | Vercel project `hisaab` under team ayrus3; production at https://hisaab-ayrus3.vercel.app, deploying from `main`. No environment variables, so there is no key to remove. |
 
@@ -38,6 +38,7 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 - Assistant module stays architecturally separate from the ledger.
 - Owner prefers production-standard choices over demo shortcuts when the two differ.
 - No deployment or data-affecting action without owner approval.
+- D23 is settled. The assistant module is not coming back, and the halved tester score is an accepted cost, not an open problem.
 
 ## Learnings
 

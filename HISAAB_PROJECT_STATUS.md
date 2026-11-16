@@ -44,7 +44,7 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 ## Not built yet
 
-- No assistant module, by decision D23. This is a decision, not unfinished work, but it is the one thing that still costs half the tester score.
+- No assistant module, by decision D23, reaffirmed 16 Nov with spare time in hand. The halved tester score is an accepted cost, not unfinished work.
 
 ## Open points
 
@@ -58,9 +58,9 @@ Detail, with what was checked where, is in `docs/11-ai-tester-acceptance-checkli
 
 | Day | Target |
 | --- | --- |
-| 17–19 Nov | Spare. The build plan is clear; the only open question is D23 (see below) |
+| 17–19 Nov | Spare. Nothing outstanding |
 | 20 Nov | Clear the demo browser, final run of every check on the live URL, then the demo |
 
 ## Single most useful next action
 
-Decide whether to stand by D23. With three spare days and the module one `git revert` away, this is now a choice rather than a constraint. `docs/14` is the script for the demo itself.
+Rehearse the demo from `docs/14`, on the phone, in a browser with clean sample data. The build is done; what decides 20 Nov now is the telling, not the code.
