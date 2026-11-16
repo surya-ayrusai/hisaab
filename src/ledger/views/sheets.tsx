@@ -54,7 +54,7 @@ export function EntryLine({
       <span
         aria-hidden="true"
         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-          cancelled ? "bg-hairline text-faint" : isCredit ? "bg-due-soft text-due" : "bg-paid-soft text-paid"
+          cancelled ? "bg-hairline text-muted" : isCredit ? "bg-due-soft text-due" : "bg-paid-soft text-paid"
         }`}
       >
         {isCredit ? "+" : "−"}
@@ -70,14 +70,14 @@ export function EntryLine({
           {entry.note ? ` · ${entry.note}` : ""}
         </p>
         {cancelled && (
-          <p className="mt-0.5 text-xs font-medium text-faint">
+          <p className="mt-0.5 text-xs font-medium text-muted">
             Cancelled{entry.cancelReason ? ` · ${entry.cancelReason}` : ""}
           </p>
         )}
         {!cancelled && onCancel && (
           <button
             type="button"
-            className="mt-1 min-h-9 text-xs font-semibold text-faint underline underline-offset-2 hover:text-due"
+            className="mt-1 min-h-9 text-xs font-semibold text-muted underline underline-offset-2 hover:text-due"
             onClick={() => onCancel(entry)}
           >
             Cancel this entry
@@ -95,7 +95,7 @@ export function EntryLine({
           />
         </button>
       )}
-      <p className={`shrink-0 text-base ${cancelled ? "text-faint line-through" : ""}`}>
+      <p className={`shrink-0 text-base ${cancelled ? "text-muted line-through" : ""}`}>
         <Money paise={entry.amountPaise} tone={cancelled ? "plain" : isCredit ? "due" : "paid"} />
       </p>
     </li>

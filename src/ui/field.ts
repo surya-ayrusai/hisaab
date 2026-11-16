@@ -2,7 +2,7 @@
 
 export const labelClass = "block text-sm font-semibold text-body";
 export const inputClass =
-  "mt-1.5 block min-h-12 w-full rounded-xl border border-line bg-card px-3.5 text-base text-ink placeholder:text-faint outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10";
+  "mt-1.5 block min-h-12 w-full rounded-xl border border-line bg-card px-3.5 text-base text-ink placeholder:text-muted outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10";
 export const errorClass = "mt-1.5 flex items-start gap-1 text-sm font-medium text-due";
 export const hintClass = "mt-1.5 text-sm text-muted";
 export const primaryButton =

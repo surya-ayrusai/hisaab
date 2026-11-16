@@ -255,7 +255,7 @@ export function EntrySheet({
       }`}
     >
       <span className="text-base font-bold">{label}</span>
-      <span className="text-xs opacity-80">{hint}</span>
+      <span className="text-xs">{hint}</span>
     </button>
   );
 

@@ -10,7 +10,7 @@ export default function Home() {
             <p className="text-sm font-bold tracking-[0.18em] text-gold">ayrus AI</p>
             <p className="mt-1 text-sm text-white/60">HISAAB is built by ayrus AI.</p>
           </div>
-          <p className="text-right text-xs text-white/40">Works offline · Your data stays on this device</p>
+          <p className="text-right text-xs text-white/60">Works offline · Your data stays on this device</p>
         </div>
       </footer>
     </>

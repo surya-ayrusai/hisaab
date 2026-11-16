@@ -9,6 +9,7 @@
   --color-ink: #0c111d;
   --color-body: #344054;
   --color-muted: #667085;
+  /* Hairlines, dividers and decorative glyphs only — never text. */
   --color-faint: #98a2b3;
   --color-line: #e4e7ec;
   --color-hairline: #f2f4f7;
@@ -19,6 +20,7 @@
   --color-brand-deep: #06302a;
   --color-brand-soft: #e7f0ed;
   --color-gold: #b98a2e;
+  --color-gold-ink: #8a6414;
   --color-gold-soft: #fbf4e4;
 
   --color-due: #b42318;

@@ -88,7 +88,7 @@ const CustomerRow = memo(function CustomerRow({
         <span className="shrink-0 text-right">
           <span
             className={`tnum block text-xl font-bold ${
-              balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-faint"
+              balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-muted"
             }`}
           >
             <span aria-hidden="true">₹</span>
@@ -98,7 +98,7 @@ const CustomerRow = memo(function CustomerRow({
             {balance > 0 ? "Due" : balance < 0 ? "Advance" : "Settled"}
           </span>
         </span>
-        <ChevronRightIcon className="h-5 w-5 shrink-0 text-faint" />
+        <ChevronRightIcon className="h-5 w-5 shrink-0 text-muted" />
       </button>
       <div className="hairline-top flex">
         <button
@@ -291,7 +291,7 @@ export function LedgerApp() {
                 Rs {formatIndianRupees(view.total)}
               </p>
             </div>
-            <span className="mt-1 h-7 rounded-full bg-gold-soft px-2.5 text-xs font-bold leading-7 text-gold">
+            <span className="mt-1 h-7 rounded-full bg-gold-soft px-2.5 text-xs font-bold leading-7 text-gold-ink">
               {formatDate(effective.today)}
             </span>
           </div>
@@ -319,7 +319,7 @@ export function LedgerApp() {
         </section>
 
         {effective.overridden && (
-          <p className="mt-3 rounded-xl bg-gold-soft px-3 py-2 text-sm font-semibold text-gold">
+          <p className="mt-3 rounded-xl bg-gold-soft px-3 py-2 text-sm font-semibold text-gold-ink">
             Showing as if today is {formatDate(effective.today)}.
           </p>
         )}
@@ -343,7 +343,7 @@ export function LedgerApp() {
               Search name or phone
             </label>
             <div className="relative min-w-0 flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 id="customer-search"
                 type="search"
