@@ -1,8 +1,8 @@
 # 11 — Tester Acceptance Checklist
 
-Project: Hisaab · First version, Phase 0 · 15 November 2026
+Project: Hisaab · Updated 16 November 2026
 
-The contract lines below are copied from HISAAB_MASTER_META_PROMPT_V3 sections 5.1 and 6.2. They must not be renamed, removed, reinterpreted or weakened. All statuses are "Not started": no application exists yet.
+The contract lines below are copied from HISAAB_MASTER_META_PROMPT_V3 sections 5.1 and 6.2. They must not be renamed, removed, reinterpreted or weakened. Ledger checks have passed locally only. Nothing is deployed, so no check has been run on the live URL yet. Assistant checks are not started.
 
 Status values: Not started · In progress · Implemented — not tested · Tested — passed · Tested — failed · Blocked · Accepted limitation.
 
@@ -10,12 +10,12 @@ Status values: Not started · In progress · Implemented — not tested · Teste
 
 | ID | Exact contract | What must be true on the deployed page | Status | Evidence |
 | --- | --- | --- | --- | --- |
-| TC-L1 | `#total-outstanding, the text contains the number, for example 11820 or Rs 11,820` | Visible element; text includes the computed sum of positive customer balances; correct after entries, imports and restores; shows 0 for an empty ledger | Not started | — |
-| TC-L2 | `[data-customer="<phone>"], with the balance inside [data-balance]` | One row per normalised 10-digit phone; a `[data-balance]` descendant with that customer's current balance; no duplicate rows after import | Not started | — |
-| TC-L3 | `a[data-remind="<phone>"], the link is https://wa.me/91<phone>?text=<message>` | Real anchor; `data-remind` is the 10-digit phone; `href` starts `https://wa.me/91<phone>?text=`; message URL-encoded, names shop and customer, states balance, polite; nothing is sent automatically; no doubled `91` | Not started | — |
-| TC-L4 | `a text area #import-box and a button #import-go. The tester pastes the JSON and presses the button` | Visible textarea and button; pasted JSON validated as a whole; rows and total update; errors readable; replace needs explicit confirmation; failed import changes nothing | Not started | — |
-| TC-L5 | `a file input #shot-input on the payment form. After saving, the entry shows img[data-shot]` | File input on the payment form; saved payment entry renders `img[data-shot]` from stored data, survives reload; no `img[data-shot]` when nothing was attached | Not started | — |
-| TC-L6 | `if you add anything that depends on the date, honour ?today=2026-11-15 in the URL` | Valid `today` becomes the effective date for defaults, labels, filters and ageing; absent uses device date; invalid falls back safely; stored dates never rewritten | Not started | — |
+| TC-L1 | `#total-outstanding, the text contains the number, for example 11820 or Rs 11,820` | Visible element; text includes the computed sum of positive customer balances; correct after entries, imports and restores; shows 0 for an empty ledger | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
+| TC-L2 | `[data-customer="<phone>"], with the balance inside [data-balance]` | One row per normalised 10-digit phone; a `[data-balance]` descendant with that customer's current balance; no duplicate rows after import | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
+| TC-L3 | `a[data-remind="<phone>"], the link is https://wa.me/91<phone>?text=<message>` | Real anchor; `data-remind` is the 10-digit phone; `href` starts `https://wa.me/91<phone>?text=`; message URL-encoded, names shop and customer, states balance, polite; nothing is sent automatically; no doubled `91` | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
+| TC-L4 | `a text area #import-box and a button #import-go. The tester pastes the JSON and presses the button` | Visible textarea and button; pasted JSON validated as a whole; rows and total update; errors readable; replace needs explicit confirmation; failed import changes nothing | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
+| TC-L5 | `a file input #shot-input on the payment form. After saving, the entry shows img[data-shot]` | File input on the payment form; saved payment entry renders `img[data-shot]` from stored data, survives reload; no `img[data-shot]` when nothing was attached | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
+| TC-L6 | `if you add anything that depends on the date, honour ?today=2026-11-15 in the URL` | Valid `today` becomes the effective date for defaults, labels, filters and ageing; absent uses device date; invalid falls back safely; stored dates never rewritten | Tested — passed (local only) | 16 Nov 2026 · local production build, Chrome, 375×812 · `npm run test:e2e` 10 of 10 passed · not yet run on deployed URL |
 
 ### Reference values from the supplied sample
 
@@ -57,6 +57,7 @@ These were confirmed on 15 Nov 2026 by running the proposed rules (credits minus
 
 ## D. Open questions affecting this checklist
 
-- Are sections A and B checked on the same URL?
-- Does the tester start from an empty browser profile?
-- How does the tester reach the payment form to find `#shot-input`?
+- Sections A and B are checked on the same URL (owner, 16 Nov 2026).
+- Assumed, not confirmed: the tester starts from an empty browser profile.
+- `#shot-input` appears after pressing a customer's Payment button; it is not on the page before that. Not confirmed that the tester reaches it this way.
+- Owner decision: `a[data-remind]` exists only for customers with a due.

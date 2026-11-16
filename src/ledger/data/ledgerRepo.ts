@@ -14,6 +14,7 @@ import {
   type CustomerRecord,
   type EntryRecord,
   type SettingsRecord,
+  type ShotRecord,
 } from "./db";
 
 export class LedgerError extends Error {
@@ -110,12 +111,15 @@ export class LedgerRepo {
     date: string;
     note?: string;
     kind?: "normal" | "opening";
+    /** Payment screenshot, already validated and downscaled. Payments only. */
+    shot?: { blob: Blob; mimeType: string };
   }): Promise<EntryRecord> {
     if (!Number.isSafeInteger(input.amountPaise) || input.amountPaise <= 0) {
       throw new LedgerError("invalid-amount", "Enter an amount more than zero.");
     }
     if (!isValidIsoDate(input.date)) throw new LedgerError("invalid-date", "Choose a valid date.");
-    return this.db.transaction("rw", this.db.customers, this.db.entries, this.db.settings, async () => {
+    const tables = [this.db.customers, this.db.entries, this.db.settings, this.db.shots];
+    return this.db.transaction("rw", tables, async () => {
       const customer = await this.db.customers.get(input.customerId);
       if (!customer) throw new LedgerError("not-found", "Customer not found.");
       const note = (input.note ?? "").trim().slice(0, 80);
@@ -138,9 +142,38 @@ export class LedgerRepo {
         }),
         createdAt: new Date().toISOString(),
       };
+      if (input.shot && input.type === "payment") {
+        const shot: ShotRecord = {
+          id: newId("s"),
+          entryId: record.id,
+          blob: input.shot.blob,
+          mimeType: input.shot.mimeType,
+          bytes: input.shot.blob.size,
+          createdAt: record.createdAt,
+        };
+        record.shotId = shot.id;
+        await this.db.shots.add(shot);
+      }
       await this.db.entries.add(record);
       await this.markEdited();
       return record;
+    });
+  }
+
+  listShots(): Promise<ShotRecord[]> {
+    return this.db.shots.toArray();
+  }
+
+  /** Removes the bundled sample shop so the shopkeeper can start their own khata. */
+  async clearSampleData(): Promise<void> {
+    const tables = [this.db.customers, this.db.entries, this.db.settings, this.db.shots];
+    await this.db.transaction("rw", tables, async () => {
+      const settings = await this.getSettings();
+      if (!settings.isDemoData) return;
+      await this.db.customers.clear();
+      await this.db.entries.clear();
+      await this.db.shots.clear();
+      await this.db.settings.put({ ...settings, shopName: "My Shop", isDemoData: false, updatedAt: new Date().toISOString() });
     });
   }
 

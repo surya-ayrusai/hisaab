@@ -1,10 +1,15 @@
+import { LedgerApp } from "@/ledger/views/LedgerApp";
+
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-[720px] flex-1 px-4 py-6">
-      <h1 className="text-2xl font-bold">Hisaab</h1>
-      <p className="mt-2 text-base">
-        Foundation build. The ledger screens are not built yet.
-      </p>
-    </main>
+    <>
+      <LedgerApp />
+      <footer className="bg-brand-dark text-white">
+        <div className="mx-auto w-full max-w-[720px] px-4 py-4 text-sm">
+          <p className="font-bold">ayrus AI</p>
+          <p className="opacity-80">Hisaab is built by ayrus AI.</p>
+        </div>
+      </footer>
+    </>
   );
 }

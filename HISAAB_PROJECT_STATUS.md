@@ -4,50 +4,46 @@ Last updated: 16 November 2026 · Demo date: 20 November 2026
 
 ## Current phase
 
-Phase 2 — Foundation: **built and tested locally; awaiting owner review.** Phase 3 (core ledger screens) not started. Nothing is deployed.
+Phases 2, 3 and 4a are built and tested **locally**. Code is on GitHub (`surya-ayrusai/hisaab`, branch `main`). **Nothing is deployed.** Phase 5 (ayrus AI Assistant) and Phase 4b are not started.
 
-## Phase 2 evidence (16 Nov 2026, local, Node 22.23, Next.js 16.4.6)
+## Evidence (16 Nov 2026, local production build, Node 22.23, Next.js 16.4.6, Chrome at 375×812)
 
 | Check | Result |
 | --- | --- |
-| Unit tests (`npm test`, Vitest 5.1.0) | 40 of 40 passed |
-| Type check (`npm run typecheck`) | Passed |
-| Lint (`npm run lint`) | Passed |
-| Production build (`npm run build`) | Passed; one static page |
+| Unit tests (`npm test`) | 40 of 40 passed |
+| Browser tests (`npm run test:e2e`) | 10 of 10 passed |
+| Type check, lint, production build | Passed |
 
-What the tests cover: paise parsing and formatting; phone normalisation (strict 6–9 rule); `?today=` resolution; balance, advance and cancelled-entry rules; the supplied sample reproducing all eight balances, the 11,820 total, the top customer and the dues-by-age bands; WhatsApp link format and Hindi/Telugu encoding; import planning (duplicates, rejections, unknown versions, untrusted fields); IndexedDB repository (add, duplicate block, cancel, reopen, import, undo, sample data replaced by first import).
+Browser tests cover: TC-L1 total, TC-L2 customer rows and balances against `sample-expected.json`, TC-L3 reminder link format and absence when nothing is due, TC-L4 paste-and-press import (same file twice, another shop replacing sample data, undo, bad input), TC-L5 screenshot saved, shown, kept after reload, refused for bad files, TC-L6 `?today=` valid and invalid, add customer, undo, advance, no horizontal overflow at 375 px.
 
-## Built in Phase 2
+## Built
 
-- Next.js + React + TypeScript project with Tailwind, system fonts, no third-party calls.
-- `src/ledger/domain`: money, phone, dates, balance, ageing, reminder, importPlan.
-- `src/ledger/data`: Dexie database, ledger repository, bundled sample shop.
-- Placeholder home page only. **No tester selector exists in the page yet**; all tester checks remain "Not started".
+- Home page: total, search, sort, customer rows with Udhaar / Payment / WhatsApp, recent entries, import box, storage notice, ayrus AI band.
+- Add customer, entry form (payment form with screenshot), customer detail with history, cancel entry, undo after save.
+- Sample shop loaded on first run and replaced by the first import.
 
-## Not done / known gaps
+## Not built yet
 
-- Code is committed locally only. Pushing to `surya-ayrusai/hisaab` is refused: the Claude GitHub App has no access to that account yet.
-- Vercel project not created (needs the pushed repository first).
-- Browser (Playwright) tests not set up yet; planned at the start of Phase 3.
-- Assistant database and module not started (Phase 5).
-- Document 11 checklist statuses unchanged: all "Not started".
+- ayrus AI Assistant (chat, tickets, staff reply, clinic info). No assistant selector exists on the page.
+- Settings (shop name, reminder language and tone), backup and restore, explicit replace import with preview, dues by age, statement, opening balance.
+- Tablet and desktop layouts not reviewed; accessibility pass not done; not tried on a real phone.
+- Vercel project not created.
 
-## Blockers
+## Open points
 
-1. GitHub push access for Claude on `surya-ayrusai/hisaab`.
+1. Vercel: the Vercel connector available here can read projects but not create one. Creation needs the owner (import the GitHub repo in Vercel) or the owner signing in to Vercel in the built-in browser so the assistant can do it.
+2. `#shot-input` is rendered only after a customer's Payment button is pressed. If the tester expects it on the first screen, this must change.
+3. Documents 04, 05 and 07 still carry outdated "decisions required" sections at their ends.
 
-## Plan to 20 November (sizes, not promises)
+## Plan to 20 November
 
 | Day | Target |
 | --- | --- |
-| 16–17 Nov | Phase 3 core ledger screens; TC-L1, TC-L2 |
-| 17–18 Nov | Phase 4a: import, reminder link, screenshot, date; TC-L3 to TC-L6 |
-| 18–19 Nov | Phase 5 ayrus AI Assistant; TC-A1 to TC-A6 |
-| 19 Nov | Phase 4b as time allows (dues by age, statement, backup); hardening at 375 px |
-| 19–20 Nov | Vercel deploy after approval; checks on the live URL |
-
-If time runs short, Phase 4b items are cut first; they are not in the tester contract.
+| 17 Nov | ayrus AI Assistant (Phase 5), TC-A1 to TC-A6 |
+| 18 Nov | Settings, backup and restore, dues by age, statement |
+| 19 Nov | Hardening at 375 px, tablet, desktop; real-phone check; Vercel deploy after approval |
+| 20 Nov | All checks on the live URL; demo guide |
 
 ## Single most useful next action
 
-Owner grants the Claude GitHub App access to the repository, then approves Phase 3.
+Owner creates the Vercel project from the GitHub repo (or signs in to Vercel in the built-in browser), and approves starting the ayrus AI Assistant.
