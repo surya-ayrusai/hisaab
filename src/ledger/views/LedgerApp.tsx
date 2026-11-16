@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { resolveEffectiveDate, type EffectiveDate } from "@/platform/dates";
 import { Avatar, ChevronRightIcon, ClockIcon, PlusIcon, SearchIcon, SettingsIcon, WhatsAppIcon } from "@/ui/icons";
 import { Wordmark } from "@/ui/Wordmark";
-import type { EntryRecord } from "../data/db";
+import type { CustomerRecord, EntryRecord } from "../data/db";
 import type { LedgerSnapshot } from "../data/ledgerRepo";
 import { balancesByCustomer, compareNewestFirst, countWithDues, totalOutstanding, type EntryType } from "../domain/balance";
 import type { Rejection } from "../domain/importPlan";
 import { formatIndianRupees, formatPlainRupees } from "../domain/money";
-import { buildWhatsAppUrl } from "../domain/reminder";
+import { buildWhatsAppUrl, type ReminderTone } from "../domain/reminder";
 import { AddCustomerSheet, EntrySheet } from "./forms";
 import {
   AgeingSheet,
@@ -45,6 +45,93 @@ interface ImportResult {
   snapshot?: LedgerSnapshot;
 }
 
+/**
+ * One customer row. Memoised on purpose: a shop with a few thousand customers
+ * renders a few thousand of these, and without this every sheet that opens or
+ * closes re-rendered the whole list, which took seconds. Virtualising the list
+ * would be faster still, but the tester contract requires one [data-customer]
+ * element per customer in the page, so the list stays complete.
+ */
+const CustomerRow = memo(function CustomerRow({
+  customer,
+  balance,
+  shopName,
+  tone,
+  onOpen,
+  onEntry,
+}: {
+  customer: CustomerRecord;
+  balance: number;
+  shopName: string;
+  tone: ReminderTone;
+  onOpen: (customerId: string) => void;
+  onEntry: (customerId: string, type: EntryType) => void;
+}) {
+  const remindUrl = buildWhatsAppUrl(customer.phone, {
+    customerName: customer.name,
+    shopName,
+    balancePaise: balance,
+    tone,
+  });
+  return (
+    <li data-customer={customer.phone} className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => onOpen(customer.id)}
+        className="flex w-full items-center gap-3 p-3.5 text-left transition hover:bg-hairline/60"
+      >
+        <Avatar name={customer.name} />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-base font-bold">{customer.name}</span>
+          <span className="tnum block text-sm text-muted">{customer.phone}</span>
+        </span>
+        <span className="shrink-0 text-right">
+          <span
+            className={`tnum block text-xl font-bold ${
+              balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-faint"
+            }`}
+          >
+            <span aria-hidden="true">₹</span>
+            <span data-balance>{formatPlainRupees(balance)}</span>
+          </span>
+          <span className="block text-xs font-bold uppercase tracking-wide text-muted">
+            {balance > 0 ? "Due" : balance < 0 ? "Advance" : "Settled"}
+          </span>
+        </span>
+        <ChevronRightIcon className="h-5 w-5 shrink-0 text-faint" />
+      </button>
+      <div className="hairline-top flex">
+        <button
+          type="button"
+          onClick={() => onEntry(customer.id, "credit")}
+          className="min-h-12 flex-1 text-sm font-bold text-due transition hover:bg-due-soft"
+        >
+          Credit
+        </button>
+        <button
+          type="button"
+          onClick={() => onEntry(customer.id, "payment")}
+          className="min-h-12 flex-1 border-l border-hairline text-sm font-bold text-paid transition hover:bg-paid-soft"
+        >
+          Payment
+        </button>
+        {remindUrl && (
+          <a
+            data-remind={customer.phone}
+            href={remindUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-12 flex-1 items-center justify-center gap-1.5 border-l border-hairline text-sm font-bold text-brand transition hover:bg-brand-soft"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+            WhatsApp
+          </a>
+        )}
+      </div>
+    </li>
+  );
+});
+
 export function LedgerApp() {
   const { state, loadError, reload, repo } = useLedger();
   const [effective, setEffective] = useState<EffectiveDate | null>(null);
@@ -61,6 +148,12 @@ export function LedgerApp() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of an external value after mount
     setEffective(resolveEffectiveDate(window.location.search));
   }, []);
+
+  const openDetail = useCallback((customerId: string) => setSheet({ kind: "detail", customerId }), []);
+  const openEntry = useCallback(
+    (customerId: string, type: EntryType) => setSheet({ kind: "entry", customerId, type }),
+    [],
+  );
 
   useEffect(() => {
     if (!toast) return;
@@ -215,6 +308,7 @@ export function LedgerApp() {
             </div>
             <button
               type="button"
+              data-open-ageing
               onClick={() => setSheet({ kind: "ageing" })}
               className="flex items-center gap-1 self-center rounded-xl bg-brand-soft px-3 py-2 text-sm font-bold text-brand transition hover:brightness-95"
             >
@@ -307,72 +401,17 @@ export function LedgerApp() {
             <p className="mt-4 text-sm text-muted">No customer matches “{search}”.</p>
           ) : (
             <ul className="mt-3 space-y-2.5">
-              {view.rows.map((customer) => {
-                const balance = view.balances.get(customer.id) ?? 0;
-                const remindUrl = buildWhatsAppUrl(customer.phone, {
-                  customerName: customer.name,
-                  shopName: settings.shopName,
-                  balancePaise: balance,
-                  tone: settings.reminderTone,
-                });
-                return (
-                  <li key={customer.id} data-customer={customer.phone} className="card overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setSheet({ kind: "detail", customerId: customer.id })}
-                      className="flex w-full items-center gap-3 p-3.5 text-left transition hover:bg-hairline/60"
-                    >
-                      <Avatar name={customer.name} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-base font-bold">{customer.name}</span>
-                        <span className="tnum block text-sm text-muted">{customer.phone}</span>
-                      </span>
-                      <span className="shrink-0 text-right">
-                        <span
-                          className={`tnum block text-xl font-bold ${
-                            balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-faint"
-                          }`}
-                        >
-                          <span aria-hidden="true">₹</span>
-                          <span data-balance>{formatPlainRupees(balance)}</span>
-                        </span>
-                        <span className="block text-xs font-bold uppercase tracking-wide text-muted">
-                          {balance > 0 ? "Due" : balance < 0 ? "Advance" : "Settled"}
-                        </span>
-                      </span>
-                      <ChevronRightIcon className="h-5 w-5 shrink-0 text-faint" />
-                    </button>
-                    <div className="hairline-top flex">
-                      <button
-                        type="button"
-                        onClick={() => setSheet({ kind: "entry", customerId: customer.id, type: "credit" })}
-                        className="min-h-12 flex-1 text-sm font-bold text-due transition hover:bg-due-soft"
-                      >
-                        Credit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSheet({ kind: "entry", customerId: customer.id, type: "payment" })}
-                        className="min-h-12 flex-1 border-l border-hairline text-sm font-bold text-paid transition hover:bg-paid-soft"
-                      >
-                        Payment
-                      </button>
-                      {remindUrl && (
-                        <a
-                          data-remind={customer.phone}
-                          href={remindUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex min-h-12 flex-1 items-center justify-center gap-1.5 border-l border-hairline text-sm font-bold text-brand transition hover:bg-brand-soft"
-                        >
-                          <WhatsAppIcon className="h-4 w-4" />
-                          WhatsApp
-                        </a>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
+              {view.rows.map((customer) => (
+                <CustomerRow
+                  key={customer.id}
+                  customer={customer}
+                  balance={view.balances.get(customer.id) ?? 0}
+                  shopName={settings.shopName}
+                  tone={settings.reminderTone}
+                  onOpen={openDetail}
+                  onEntry={openEntry}
+                />
+              ))}
             </ul>
           )}
         </section>
