@@ -1,12 +1,12 @@
 # 09 — Test Strategy and Test Cases
 
-Project: Hisaab · Phase 1 · 16 November 2026 · Status: **draft for owner approval**. No test has been run against an application; none exists.
+Project: HISAAB · 16 November 2026 · Status: **in force**. Last run at commit `b7cc72f`: 47 unit tests and 17 browser tests, all passing, plus a re-check of all six ledger contract points on the deployed page.
 
 ## 1. Approach
 
 | Layer | Tool | What it proves |
 | --- | --- | --- |
-| Unit | Vitest | Money, balance, phone, date, ageing, import planning, reminder text, language and intent rules |
+| Unit | Vitest with fake-indexeddb | Money, balance, phone, date, ageing, import planning, reminder text, backup, replace and erase |
 | Browser | Playwright at 375×812, 768×1024, 1280×800 | Real page behaviour and every tester selector |
 | Deployed | Same browser suite pointed at the Vercel URL | What the tester will actually see |
 | Manual | Android phone with Chrome | Keyboard, file picker, WhatsApp hand-off |
@@ -56,7 +56,7 @@ A requirement is "Tested — passed" only with a recorded run: date, build, envi
 | TEST-108 | TC-L2 | Customer detail open | Still one `[data-customer]` per phone in the page |
 | TEST-109 | TC-L3 | Customer with dues | `a[data-remind="9000000102"]` exists; `href` starts `https://wa.me/919000000102?text=` |
 | TEST-110 | TC-L3 | Decode message | Contains customer name, shop name, `3470` or `3,470` |
-| TEST-111 | TC-L3 | Hindi and Telugu templates, name with `&`, `#`, `+` | `href` decodes to the exact message |
+| TEST-111 | TC-L3 | Each tone, and a name with `&`, `#`, `+` | `href` decodes to the exact message |
 | TEST-112 | TC-L3 | Customer with zero or advance | No `a[data-remind]` (owner decision D5) |
 | TEST-113 | TC-L3 | Phone never produces `9191…` | Checked for all rows |
 | TEST-114 | TC-L4 | Paste sample into `#import-box`, press `#import-go` once, on demo data | Rows and total equal expected file with no further click |
@@ -77,23 +77,15 @@ A requirement is "Tested — passed" only with a recorded run: date, build, envi
 
 ## 4. Tester contract cases — assistant
 
+**Removed by owner decision D23 (16 Nov 2026).** The Assistant & Ticketing module was built, verified on the deployed page and then removed at the owner's direction, after the owner was shown that V3 section 6 requires it and that six of the twelve tester checks depend on it. Tests TEST-201 to TEST-215 no longer apply.
+
+One test replaces them:
+
 | ID | Check | Case | Expected |
 | --- | --- | --- | --- |
-| TEST-201 | TC-A1 | Type and press `#chat-send`; type and press Enter | Reply appears |
-| TEST-202 | TC-A2 | After any question | Last `.bot-msg` in the page is the answer to it |
-| TEST-203 | TC-A2 | Initial page | Greeting, if any, has no `bot-msg` class |
-| TEST-204 | TC-A3 | `?q=What are your timings?` | Asked once; one new ticket; reply present |
-| TEST-205 | TC-A3 | `?q=` with `?today=` together | Both honoured |
-| TEST-206 | TC-A4 | English, Hindi, Telugu timing questions | Reply in the same language with saved timings |
-| TEST-207 | TC-A4 | Unknown question | Hand-off reply; ticket `needs human` |
-| TEST-208 | TC-A4 | "I want an appointment tomorrow at 5 pm" | Ticket with date and 17:00; `needs human` |
-| TEST-209 | TC-A4 | Emergency wording | Ticket `urgent`, priority urgent |
-| TEST-210 | TC-A4 | All tickets | `data-status` is one of the four exact values |
-| TEST-211 | TC-A5 | Two tickets; reply in the second ticket's `#staff-reply` and press its `#staff-send` | Only the second ticket shows the reply and becomes `answered` |
-| TEST-212 | — | Edit timings, save, ask again | New timings in the reply; version increased |
-| TEST-213 | — | Quick reply button | Sends its question |
-| TEST-214 | TC-A6 | Run whole suite twice | Identical results; no network requests from the module |
-| TEST-215 | — | Ticket age and priority after time passes | Age increases; display correct |
+| TEST-230 | D23 | The deployed home page | None of `#chat-input`, `#chat-send`, `.bot-msg`, `#ticket-queue`, `[data-ticket]`, `#staff-reply`, `#staff-send` exists anywhere in the page; `?q=` in the URL is ignored and the ledger is undisturbed |
+
+The working module remains in git history at commit `022315a` if it is ever wanted back.
 
 ## 5. Responsive, accessibility, security checks
 
@@ -109,7 +101,7 @@ A requirement is "Tested — passed" only with a recorded run: date, build, envi
 
 ## 6. Traceability matrix (initial)
 
-All rows: test status **Not started**, evidence none, owner approval pending.
+Status at commit `b7cc72f`. Every ledger row below is **Tested — passed**, locally and on the deployed page; the assistant rows are **Removed (D23)**.
 
 | Requirement | Pri | Phase | Design ref | Component | Tests |
 | --- | --- | --- | --- | --- | --- |
@@ -123,15 +115,12 @@ All rows: test status **Not started**, evidence none, owner approval pending.
 | FR-011 (TC-L5) | P0 | 4a | 07 §3.3 | ledger/data shots; platform image | 122–125 |
 | FR-012, FR-013 (TC-L3) | P0/P1 | 4a/4b | 07 §2 | ledger/domain reminder | 109–113 |
 | FR-014, FR-015 (TC-L4) | P0 | 4a | 06 §3; 07 §3.5 | ledger/domain import | 114–121 |
-| FR-016 | P1 | 4b | 06 §3.2 | ledger/domain export | 019 |
+| FR-016 | P1 | 4b | 06 §3.2 | ledger/data export, applyReplace, eraseAll | 019–021 |
 | FR-017 (TC-L6) | P0 | 2 | 05 §5 | app/effective date | 126–128 |
 | FR-018 | P0 | 2 | 05 ADR-1 | ledger/data | 014 |
 | FR-019 | P0 | 3 | 04 P1 | ledger/data seed | 114, 116 |
-| FR-022 | P1 | 4b | 07 §3.7 | ledger/domain ageing | 017 |
-| FR-023 | P1 | 4b | 07 §3.8 | ledger/views statement | 018 |
-| FR-024 | P1 | 4b | 06 §3.6 | ledger/domain | 016 |
-| AR-001–003 (TC-A1–A3) | P0 | 5 | 07 §3.9 | demo/views chat | 201–205 |
-| AR-004–008 | P0 | 5 | 04 §7 | demo/domain | 206–209, 212, 213 |
-| AR-009–012 (TC-A4, A5) | P0 | 5 | 07 §3.9 | demo/views queue | 210, 211, 215 |
-| AR-013, AR-014 (TC-A6) | P0 | 5 | 05 ADR-6 | demo | 214 |
+| FR-022 | P1 | 4b | 07 §3.7 | ledger/domain ageing; views AgeingSheet | 017 |
+| FR-023 | P1 | 4b | 07 §3.8 | ledger/views StatementSheet | 018, 022 |
+| FR-024 | P1 | 4b | 06 §3.6 | ledger/data addCustomer opening | 016, 018 |
+| AR-001–014 (TC-A1–A6) | — | — | — | Removed by decision D23 | 230 |
 | NFR-001–008 | P0 | 6 | 07, 13 | all | 301–307 |

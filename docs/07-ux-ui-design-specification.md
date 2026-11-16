@@ -1,28 +1,32 @@
 # 07 — UX / UI Design Specification
 
-Project: Hisaab · Phase 1 · 16 November 2026 · Status: **draft for owner approval**. Wireframe level; no visual design has been produced.
+Project: HISAAB · 16 November 2026 · Status: **as built and deployed** at https://hisaab-ayrus3.vercel.app. Supersedes the Phase 1 wireframe draft.
 
 ## 1. Principles
 
-One page. Biggest thing on screen is what the shop is owed. Two verbs only: Udhaar (credit given) and Payment received. Every save can be undone. Words a shopkeeper uses.
+One page. The biggest thing on screen is what the shop is owed. Two verbs only: Credit (goods given) and Payment (money received). Every save can be undone. English throughout, in the plainest words that still say the right thing (owner decision D22).
 
 ## 2. Page structure at 375 px
 
 ```
 ┌─────────────────────────────────────┐
-│ Hisaab · <Shop name>            ⚙   │  header
-│ [Sample data — Clear]               │  only while demo data is loaded
+│ HISAAB · <Shop name>            ⚙   │  gradient header, settings button
 ├─────────────────────────────────────┤
-│ Total to collect                    │
-│ Rs 11,820          #total-outstanding
-│ 8 customers · 8 with dues           │
-│ [ How old are the dues › ]          │
+│ ┌─ card, lifted over the header ──┐ │
+│ │ TOTAL TO COLLECT     [15 Nov]   │ │
+│ │ Rs 11,820         #total-outstanding
+│ │ 8 Customers │ 8 With dues │ ⏱ Dues by age
+│ └─────────────────────────────────┘ │
+│ [Showing as if today is …]          │  only with ?today=
+│ [Sample data — Clear sample data]   │  only while sample data is loaded
 ├─────────────────────────────────────┤
-│ 🔍 Search name or phone   [+ Customer]
+│ 🔍 Search customer        [+ Customer]
+│ All customers        Show first [▾] │
 ├─────────────────────────────────────┤
-│ Sunita Devi                 ₹ 3470  │  [data-customer] row; number is [data-balance]
-│ 9000000102                          │
-│ [Udhaar] [Payment] [WhatsApp]       │  WhatsApp = a[data-remind], only if due
+│ (S) Sunita Devi          ₹3470  ›   │  [data-customer] row; number is [data-balance]
+│     9000000102            DUE       │
+│ ──────────────────────────────────  │
+│ Credit │ Payment │ ⬤ WhatsApp       │  WhatsApp = a[data-remind], only if due
 ├─────────────────────────────────────┤
 │ … more rows …                       │
 ├─────────────────────────────────────┤
@@ -32,75 +36,71 @@ One page. Biggest thing on screen is what the shop is owed. Two verbs only: Udha
 │ [ textarea  #import-box          ]  │
 │ [ Import  #import-go ]              │
 ├─────────────────────────────────────┤
-│ Data on this phone only · Backup    │
+│ Storage notice                      │
 ╞═════════════════════════════════════╡
-│ ayrus AI                            │  company band (the assistant section
-│                                     │  was removed by decision D23)
+│ ayrus AI                            │  company band
 └─────────────────────────────────────┘
 ```
 
-A fixed bottom bar offers two jumps: **Khata** and **Demo**. Tablet and desktop: same order in a centred column up to 720 px; the demo band may sit as a second column from 1100 px.
+Everything beyond the home page is a bottom sheet, so the ledger is never more than one tap away and nothing navigates away from the total. Tablet and desktop: the same order in a centred column up to 720 px; sheets become centred cards from 640 px.
 
 ## 3. Screens and sheets
 
 ### 3.1 Home (above)
 
-- Row shows name, phone, balance. Due in the credit colour, advance labelled "Advance" with a negative number, zero in neutral.
-- Tapping the name opens Customer detail.
-- Empty state: "No customers yet. Add your first customer." with one button.
+- A row shows the customer's initial, name, phone and balance. Money owed in the due colour, an overpayment labelled "Advance", a settled customer in neutral grey.
+- Tapping the row opens Customer detail. The three actions below it skip that step: Credit, Payment, WhatsApp.
+- Empty state: "No customers yet." with one button.
 
 ### 3.2 Add customer (sheet)
 
-Fields: Name, Mobile number (numeric keypad). Optional "Already owes" amount and date (FR-024). Save disabled until valid. Duplicate phone shows the existing customer with "Open".
+Name and mobile number (numeric keypad). A tick box, "This customer already owes money", reveals an opening amount and the date it has been owed since; it is written as a single `kind: "opening"` credit entry so it is counted once and shows in the history (FR-024). A duplicate phone shows the existing customer with "Open".
 
 ### 3.3 Entry form (sheet) — the payment form
 
 ```
-Sunita Devi · owes ₹3,470
-[ Udhaar ]  [ Payment ]        ← two large toggles, no default when opened from the row's name
-Amount  ₹ [        ]           ← numeric keypad, focused
-Date    [ 16 Nov 2026 ]        ← effective today
+Sunita Devi · Owes ₹3,470
+[ Credit ]  [ Payment ]        ← two large toggles, no default when opened from the row
+Amount  ₹ [        ]           ← numeric keypad, focused, 30 px figure
+Date    [ 15 Nov 2026 ]        ← effective today
 Note    [ optional ]
 Payment screenshot  [ Choose file ]   ← input #shot-input, shown for Payment
 [ Save payment of ₹500 ]       ← button text repeats type and amount
 ```
 
-- Opened from a row's Udhaar or Payment button, the type is preset, so the routine path is: button, amount, Save.
-- Save button colour and wording follow the type, to prevent wrong-type saves.
-- Double-tap protection: button disables on first press.
-- After save: sheet closes, row and total update, toast "Payment ₹500 saved · Undo".
+- Opened from a row's Credit or Payment button the type is preset, so the routine path is: button, amount, Save.
+- The Save button takes the colour and wording of the type, which is what prevents a wrong-type save.
+- The button disables on first press, so a double tap cannot save twice.
+- A payment larger than the balance says so before saving: the extra will show as an advance.
+- After saving: the sheet closes, the row and total update, and a toast offers Undo.
 
 ### 3.4 Customer detail (sheet)
 
-Name, phone, balance, three actions (Udhaar, Payment, WhatsApp if due), Statement. History newest first. Each entry: date, type, amount, note, thumbnail if any (`img[data-shot]`), and a Cancel action. Cancelled entries struck through with "cancelled on …".
+Balance, with credit given and received beneath it. Four actions: Credit, Payment, Remind (if due) and Statement. History newest first — date, type, amount, note, thumbnail if any (`img[data-shot]`), and a quiet Cancel action. Cancelled entries are struck through and stop counting.
 
 This sheet does not use `data-customer` or `data-balance`, so the home rows stay the only match.
 
 ### 3.5 Import
 
 On the home page. After pressing Import:
-- Additive: green summary "8 customers added, 38 entries added, 0 skipped, 0 rejected · Undo".
-- Sample data present and untouched: "Sample data was replaced by your import · Undo".
-- Replace or conflicts: preview panel with counts, a plain explanation of Add versus Replace, and "Replace my data" requiring a tick box first.
-- Errors: red panel listing row and reason; the pasted text stays in the box.
+- Additive: a summary — customers added, already in ledger, entries added, skipped as duplicates, rejected — with Undo.
+- Sample data present and untouched: "Sample data was replaced by your import", with Undo.
+- Errors: a panel listing row and reason; the pasted text stays in the box.
+- Replacing the whole ledger is deliberately **not** on this button. It lives in Settings, behind a preview and a tick box (3.6).
 
 ### 3.6 Settings and data (sheet)
 
-Shop name · reminder language and tone with live preview of the message · Download backup · Restore from backup · Clear sample data · storage and privacy explanation.
+Shop name · reminder tone (Friendly, Polite, Formal) with a live preview of the actual WhatsApp message · Download backup · Restore from backup · Erase all data · the storage and privacy explanation.
+
+Restore shows what the file holds and what will be lost, and needs a tick box before the button works. Restore and Erase both leave an Undo in the toast. Backups carry customers and entries, not payment screenshots, and the sheet says so.
 
 ### 3.7 How old are the dues (sheet)
 
-Five bands with amounts, then customers ordered by oldest unpaid credit. One line of explanation: "Payments are counted against the oldest udhaar first."
+Five bands with amounts and a share bar, the total beneath them, then customers ordered by the oldest unpaid credit with the number of days. One line of explanation: payments are counted against the oldest credit first.
 
 ### 3.8 Statement (print view)
 
-Shop name, customer, period, opening balance, dated lines, closing balance. "Print or save as PDF".
-
-### 3.9 Assistant & Ticketing Demo — removed by owner decision D23 (16 Nov 2026)
-
-- Chat: message list, quick-reply buttons, `#chat-input`, `#chat-send`.
-- Ticket queue `#ticket-queue`: cards with number, question, status badge, priority, age, requested time, replies, and its own `#staff-reply` and `#staff-send`, plus Close.
-- Clinic info editor: one field per knowledge item and language, Save with "Saved · version 4".
+Shop name, customer, period, opening balance, dated lines with a running balance, closing balance, and a sentence stating what is owed as on the end date. "Print or save as PDF" prints the statement alone, through a print stylesheet that hides the rest of the page.
 
 ## 4. Design system (as built)
 
