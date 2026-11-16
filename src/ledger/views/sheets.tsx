@@ -77,7 +77,7 @@ export function EntryLine({
         {!cancelled && onCancel && (
           <button
             type="button"
-            className="mt-1 min-h-9 text-xs font-semibold text-muted underline underline-offset-2 hover:text-due"
+            className="mt-1 min-h-11 text-xs font-semibold text-muted underline underline-offset-2 hover:text-due"
             onClick={() => onCancel(entry)}
           >
             Cancel this entry

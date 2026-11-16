@@ -74,3 +74,31 @@ test("an amount can be recorded without touching the mouse", async ({ page }) =>
   await page.keyboard.press("Enter");
   await expect(row.locator("[data-balance]")).toHaveText("600");
 });
+
+test("every control a thumb can reach is at least 44px tall", async ({ page }) => {
+  await open(page);
+
+  /** Visually hidden inputs are excluded: each has a visible full-size label. */
+  const undersized = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>("button, a[href], input, select, textarea")]
+        .filter((el) => el.offsetParent !== null && !el.classList.contains("sr-only"))
+        .map((el) => ({ h: Math.round(el.getBoundingClientRect().height), html: el.outerHTML.slice(0, 90) }))
+        .filter((e) => e.h > 0 && e.h < 44),
+    );
+
+  expect(await undersized(), "home").toEqual([]);
+
+  await page.click('button[aria-label="Settings and data"]');
+  await page.waitForSelector("#shop-name");
+  expect(await undersized(), "settings").toEqual([]);
+  await page.click("[role=dialog] button[aria-label=Close]");
+
+  await page.click("[data-customer] button");
+  await page.waitForSelector("[role=dialog]");
+  expect(await undersized(), "customer detail").toEqual([]);
+
+  await page.click('[role=dialog] button:has-text("Payment")');
+  await page.waitForSelector("#shot-input");
+  expect(await undersized(), "payment form").toEqual([]);
+});

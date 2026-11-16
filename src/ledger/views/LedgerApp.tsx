@@ -310,7 +310,7 @@ export function LedgerApp() {
               type="button"
               data-open-ageing
               onClick={() => setSheet({ kind: "ageing" })}
-              className="flex items-center gap-1 self-center rounded-xl bg-brand-soft px-3 py-2 text-sm font-bold text-brand transition hover:brightness-95"
+              className="flex min-h-11 items-center gap-1 self-center rounded-xl bg-brand-soft px-3 text-sm font-bold text-brand transition hover:brightness-95"
             >
               <ClockIcon className="h-4 w-4" />
               Dues by age
@@ -376,7 +376,7 @@ export function LedgerApp() {
                 id="customer-sort"
                 value={sort}
                 onChange={(e) => setSort(e.target.value === "due" ? "due" : "newest")}
-                className="min-h-10 rounded-lg border border-line bg-card px-2 font-semibold outline-none"
+                className="min-h-11 rounded-lg border border-line bg-card px-2 font-semibold outline-none"
               >
                 <option value="newest">Newest</option>
                 <option value="due">Highest dues</option>
