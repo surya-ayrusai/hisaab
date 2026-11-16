@@ -45,3 +45,7 @@ Concise durable decisions and learnings. Updated 16 November 2026.
 - Zod was dropped; import validation is hand-written to give per-row reasons.
 - The repository was empty at first clone. Claude cannot push until the Claude GitHub App is installed on the `surya-ayrusai` account.
 - Project instructions cannot be edited by the assistant; only project docs can.
+- Next.js 16 refuses `Date.now()` during prerender in a client component; read the clock in an effect instead.
+- The Vercel connector needed `authorize_team_access` for team ayrus3; reconnecting alone did not grant it.
+- This workspace's proxy blocks `vercel.app`, so deployed checks run through the owner's built-in browser, not from here.
+- Indic text renders correctly on the owner's machine; the test container lacks a Telugu font, which only affects screenshots taken here.
