@@ -153,7 +153,7 @@ test("TC-L6: ?today= sets the default entry date; invalid or absent falls back",
 
 test("core ledger: add customer, credit, undo, cancel, duplicate and invalid phone", async ({ page }) => {
   await open(page);
-  await page.getByRole("button", { name: "+ Customer" }).click();
+  await page.getByRole("button", { name: "Add customer" }).click();
   await page.locator("#customer-name").fill("Test Buyer");
   await page.locator("#customer-phone").fill("12345");
   await page.getByRole("button", { name: "Save customer" }).click();
@@ -208,5 +208,66 @@ test("the page carries no assistant or ticketing markup", async ({ page }) => {
   }
   // ?q= is no longer handled and must not break the ledger.
   await page.goto("/?today=2026-11-15&q=What%20are%20your%20timings%3F");
+  await expect(page.locator("#total-outstanding")).toContainText("11,820");
+});
+
+test("opening balance: a new customer can carry a balance over from the notebook", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Add customer" }).click();
+  await page.locator("#customer-name").fill("Carried Over");
+  await page.locator("#customer-phone").fill("9876501234");
+  await page.getByText("This customer already owes money").click();
+  await page.locator("#opening-amount").fill("1500");
+  await page.locator("#opening-date").fill("2026-09-01");
+  await page.getByRole("button", { name: "Save customer" }).click();
+
+  const row = page.locator('[data-customer="9876501234"]');
+  await expect(row.locator("[data-balance]")).toHaveText("1500");
+  await expect(page.locator("#total-outstanding")).toContainText("13,320");
+  await row.getByRole("button", { name: "Credit" }).first().click();
+  await page.getByRole("button", { name: "Close" }).click();
+});
+
+test("dues by age: bands, total and the oldest customer first", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Dues by age" }).click();
+  await expect(page.locator("[data-band]")).toHaveCount(5);
+  expect(digits(await page.locator("[data-ageing-total]").textContent())).toBe(String(expected.total_outstanding));
+  const first = page.locator("dialog, [role=dialog]").getByRole("button").nth(1);
+  await expect(first).toBeVisible();
+});
+
+test("statement: opening, entries and closing balance for one customer", async ({ page }) => {
+  await open(page);
+  await page.locator('[data-customer="9000000102"]').getByRole("button", { name: /^Sunita Devi/ }).click();
+  await page.getByRole("button", { name: "Statement" }).click();
+  await expect(page.locator("[data-statement]")).toBeVisible();
+  await expect(page.locator("[data-statement]")).toContainText("Account statement");
+  expect(digits(await page.locator("[data-statement-closing]").textContent())).toBe(
+    String(expected.balances["9000000102"]),
+  );
+});
+
+test("settings: shop name and reminder tone reach the WhatsApp message", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: "Settings and data" }).click();
+  await page.locator("#shop-name").fill("Sharma Kirana");
+  await page.locator("#shop-name").blur();
+  await page.getByRole("button", { name: "Formal" }).click();
+  await expect(page.locator("[data-reminder-preview]")).toContainText("Sharma Kirana");
+  await page.getByRole("button", { name: "Close" }).click();
+
+  const href = await page.locator('a[data-remind="9000000102"]').getAttribute("href");
+  expect(decodeURIComponent(href ?? "")).toContain("Sharma Kirana");
+});
+
+test("settings: erasing everything is undoable", async ({ page }) => {
+  await open(page);
+  page.once("dialog", (d) => d.accept());
+  await page.getByRole("button", { name: "Settings and data" }).click();
+  await page.getByRole("button", { name: "Erase all data" }).click();
+  await expect(page.locator("[data-customer]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Undo" }).click();
+  await expect(page.locator("[data-customer]")).toHaveCount(8);
   await expect(page.locator("#total-outstanding")).toContainText("11,820");
 });

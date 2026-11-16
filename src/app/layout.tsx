@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Know who owes what, keep every entry clear, and remind customers through WhatsApp in one tap.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0b4f43" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

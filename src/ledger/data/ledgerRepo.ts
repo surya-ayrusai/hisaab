@@ -34,7 +34,7 @@ export interface LedgerSnapshot {
 }
 
 export interface ImportOutcome {
-  mode: "add" | "demo-replace";
+  mode: "add" | "demo-replace" | "replace";
   created: number;
   matched: number;
   added: number;
@@ -79,12 +79,25 @@ export class LedgerRepo {
     return this.db.entries.toArray();
   }
 
-  async addCustomer(input: { name: string; phone: string; notes?: string }): Promise<CustomerRecord> {
+  async addCustomer(input: {
+    name: string;
+    phone: string;
+    notes?: string;
+    /** Carried over from a paper ledger; stored as one entry so it is counted once. */
+    opening?: { amountPaise: number; date: string };
+  }): Promise<CustomerRecord> {
     const name = input.name.trim();
     if (name.length < 1 || name.length > 60) throw new LedgerError("invalid-name", "Enter the customer's name.");
     const phone = normalizePhone(input.phone);
     if (!phone) throw new LedgerError("invalid-phone", "Enter a valid 10-digit mobile number.");
-    return this.db.transaction("rw", this.db.customers, this.db.settings, async () => {
+    if (input.opening) {
+      if (!Number.isSafeInteger(input.opening.amountPaise) || input.opening.amountPaise <= 0) {
+        throw new LedgerError("invalid-amount", "Enter an opening amount more than zero.");
+      }
+      if (!isValidIsoDate(input.opening.date)) throw new LedgerError("invalid-date", "Choose a valid opening date.");
+    }
+    const tables = [this.db.customers, this.db.entries, this.db.settings];
+    return this.db.transaction("rw", tables, async () => {
       if (await this.db.customers.where("phone").equals(phone).first()) {
         throw new LedgerError("duplicate-phone", "This number is already in your ledger.");
       }
@@ -99,6 +112,27 @@ export class LedgerRepo {
         seq: await this.nextSeq(),
       };
       await this.db.customers.add(record);
+      if (input.opening) {
+        await this.db.entries.add({
+          id: newId("e"),
+          customerId: record.id,
+          type: "credit",
+          kind: "opening",
+          amountPaise: input.opening.amountPaise,
+          date: input.opening.date,
+          note: "Opening balance",
+          status: "active",
+          source: "manual",
+          importKey: entryFingerprint({
+            phone,
+            type: "credit",
+            amountPaise: input.opening.amountPaise,
+            date: input.opening.date,
+            note: "Opening balance",
+          }),
+          createdAt: now,
+        });
+      }
       await this.markEdited();
       return record;
     });
@@ -319,6 +353,134 @@ export class LedgerRepo {
       });
       return outcome;
     });
+  }
+
+  /** The whole ledger as a versioned backup file. Screenshots are not included. */
+  async exportBackup(): Promise<string> {
+    const [settings, customers, entries] = await Promise.all([
+      this.getSettings(),
+      this.db.customers.toArray(),
+      this.db.entries.toArray(),
+    ]);
+    const phoneById = new Map(customers.map((c) => [c.id, c.phone]));
+    return JSON.stringify(
+      {
+        format: "hisaab-ledger",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        shop: settings.shopName,
+        customers: customers
+          .sort((a, b) => a.seq - b.seq)
+          .map((c) => ({ name: c.name, phone: c.phone, notes: c.notes, createdAt: c.createdAt })),
+        entries: entries.map((e) => ({
+          id: e.id,
+          phone: phoneById.get(e.customerId) ?? "",
+          type: e.type,
+          kind: e.kind,
+          amount: e.amountPaise / 100,
+          date: e.date,
+          note: e.note,
+          status: e.status,
+          createdAt: e.createdAt,
+          hasScreenshot: Boolean(e.shotId),
+        })),
+      },
+      null,
+      2,
+    );
+  }
+
+  /**
+   * Replaces everything with the contents of a validated plan, after the caller
+   * has shown a preview and taken an explicit confirmation. Returns a snapshot
+   * so the change can still be undone.
+   */
+  async applyReplace(plan: ImportPlan): Promise<ImportOutcome> {
+    const snapshot = await this.snapshot();
+    const tables = [this.db.customers, this.db.entries, this.db.shots, this.db.settings, this.db.importLog];
+    return this.db.transaction("rw", tables, async () => {
+      const settings = await this.getSettings();
+      await this.db.customers.clear();
+      await this.db.entries.clear();
+      await this.db.shots.clear();
+      const now = new Date().toISOString();
+      let seq = 1;
+      const idByPhone = new Map<string, string>();
+      const customers: CustomerRecord[] = plan.customersToCreate.map((c) => {
+        const record: CustomerRecord = {
+          id: newId("c"),
+          phone: c.phone,
+          name: c.name,
+          notes: c.notes,
+          createdAt: c.createdAt ?? now,
+          updatedAt: now,
+          seq: seq++,
+        };
+        idByPhone.set(c.phone, record.id);
+        return record;
+      });
+      await this.db.customers.bulkAdd(customers);
+      const entries: EntryRecord[] = [];
+      plan.entriesToAdd.forEach((e, index) => {
+        const customerId = idByPhone.get(e.phone);
+        if (!customerId) return;
+        entries.push({
+          id: e.id ?? newId("e"),
+          customerId,
+          type: e.type,
+          kind: e.kind,
+          amountPaise: e.amountPaise,
+          date: e.date,
+          note: e.note,
+          status: e.status,
+          source: "import",
+          importKey: e.importKey,
+          createdAt: e.createdAt ?? new Date(Date.parse(now) + index).toISOString(),
+        });
+      });
+      await this.db.entries.bulkAdd(entries);
+      await this.db.settings.put({
+        ...settings,
+        shopName: plan.shopName ?? settings.shopName,
+        isDemoData: false,
+        updatedAt: now,
+      });
+      const outcome: ImportOutcome = {
+        mode: "replace",
+        created: customers.length,
+        matched: 0,
+        added: entries.length,
+        skipped: plan.entriesSkipped,
+        rejected: plan.rejected.length,
+        snapshot,
+      };
+      await this.db.importLog.add({
+        id: newId("i"),
+        at: now,
+        mode: "replace",
+        created: outcome.created,
+        matched: 0,
+        added: outcome.added,
+        skipped: outcome.skipped,
+        rejected: outcome.rejected,
+        format: plan.format,
+      });
+      return outcome;
+    });
+  }
+
+  /** Removes every customer, entry and screenshot. The shop settings are kept. */
+  async eraseAll(): Promise<LedgerSnapshot> {
+    const snapshot = await this.snapshot();
+    const tables = [this.db.customers, this.db.entries, this.db.shots, this.db.settings];
+    await this.db.transaction("rw", tables, async () => {
+      const settings = await this.getSettings();
+      await this.db.customers.clear();
+      await this.db.entries.clear();
+      await this.db.shots.clear();
+      await this.db.settings.put({ ...settings, isDemoData: false, updatedAt: new Date().toISOString() });
+    });
+    return snapshot;
   }
 
   /** Loads the bundled sample shop into an empty ledger and marks it as sample data. */

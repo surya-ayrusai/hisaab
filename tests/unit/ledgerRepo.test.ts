@@ -147,3 +147,89 @@ describe("sample (demo) data", () => {
     expect(await repo.listCustomers()).toHaveLength(8);
   });
 });
+
+describe("opening balance", () => {
+  it("is recorded as one credit entry and counts towards the balance", async () => {
+    const customer = await repo.addCustomer({
+      name: "Carried Over",
+      phone: "9812345678",
+      opening: { amountPaise: 250000, date: "2026-10-01" },
+    });
+    const entries = await repo.listEntries();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      customerId: customer.id,
+      type: "credit",
+      kind: "opening",
+      amountPaise: 250000,
+      date: "2026-10-01",
+      note: "Opening balance",
+    });
+    expect(await total(repo)).toBe(250000);
+  });
+
+  it("is rejected without saving the customer when the amount is not valid", async () => {
+    await expect(
+      repo.addCustomer({ name: "Bad", phone: "9812345670", opening: { amountPaise: 0, date: "2026-10-01" } }),
+    ).rejects.toBeInstanceOf(LedgerError);
+    expect(await repo.listCustomers()).toHaveLength(0);
+  });
+
+  it("is optional", async () => {
+    await repo.addCustomer({ name: "Fresh", phone: "9812345671" });
+    expect(await repo.listEntries()).toHaveLength(0);
+  });
+});
+
+describe("backup and restore", () => {
+  const smallShop = JSON.stringify({
+    shop: "Another Shop",
+    customers: [{ name: "New Person", phone: "9822222222" }],
+    entries: [{ phone: "9822222222", type: "credit", amount: 700, date: "2026-11-10", note: "rice" }],
+  });
+
+  it("exports a file that can be read back as the same ledger", async () => {
+    await repo.seedDemoIfEmpty(sampleText);
+    const before = await total(repo);
+    const backup = await repo.exportBackup();
+    const parsed = JSON.parse(backup);
+    expect(parsed.format).toBe("hisaab-ledger");
+    expect(parsed.version).toBe(1);
+    expect(parsed.customers).toHaveLength(8);
+    expect(parsed.entries).toHaveLength(38);
+
+    const fresh = new LedgerRepo(new LedgerDb(`test-ledger-restore-${counter}`));
+    await importText(fresh, backup);
+    expect(await fresh.listCustomers()).toHaveLength(8);
+    expect(await total(fresh)).toBe(before);
+  });
+
+  it("replaces the whole ledger and can be undone", async () => {
+    await repo.seedDemoIfEmpty(sampleText);
+    await repo.addCustomer({ name: "Mine", phone: "9811111111" });
+    const before = await repo.snapshot();
+
+    const plan = await repo.planImport(smallShop);
+    if (!plan.ok) throw new Error(plan.error);
+    const outcome = await repo.applyReplace(plan);
+    expect(outcome.mode).toBe("replace");
+    expect(await repo.listCustomers()).toHaveLength(1);
+    expect(await total(repo)).toBe(70000);
+
+    await repo.restoreSnapshot(outcome.snapshot);
+    expect(await repo.listCustomers()).toHaveLength(9);
+    expect(await repo.listEntries()).toHaveLength(before.entries.length);
+  });
+
+  it("erases customers and entries but keeps the shop settings", async () => {
+    await repo.seedDemoIfEmpty(sampleText);
+    await repo.saveSettings({ shopName: "Sharma Kirana" });
+    const snapshot = await repo.eraseAll();
+    expect(await repo.listCustomers()).toHaveLength(0);
+    expect(await repo.listEntries()).toHaveLength(0);
+    expect((await repo.getSettings()).shopName).toBe("Sharma Kirana");
+
+    await repo.restoreSnapshot(snapshot);
+    expect(await repo.listCustomers()).toHaveLength(8);
+  });
+});

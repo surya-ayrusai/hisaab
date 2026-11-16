@@ -1,22 +1,115 @@
 @import "tailwindcss";
 
+/**
+ * HISAAB design tokens. A restrained, high-contrast palette: deep emerald for
+ * the brand, a muted gold used sparingly for emphasis, and separate colours for
+ * money owed and money received so the two are never confused.
+ */
 @theme inline {
-  --color-brand: #0f5c55;
-  --color-brand-dark: #0a403b;
-  --color-due: #b3261e;
-  --color-paid: #1b7f3b;
-  --color-ink: #1c1c1a;
-  --color-muted: #5f5f5a;
-  --color-surface: #fafaf7;
-  --color-line: #e3e3dc;
+  --color-ink: #0c111d;
+  --color-body: #344054;
+  --color-muted: #667085;
+  --color-faint: #98a2b3;
+  --color-line: #e4e7ec;
+  --color-hairline: #f2f4f7;
+  --color-surface: #f6f8f7;
+  --color-card: #ffffff;
+
+  --color-brand: #0b4f43;
+  --color-brand-deep: #06302a;
+  --color-brand-soft: #e7f0ed;
+  --color-gold: #b98a2e;
+  --color-gold-soft: #fbf4e4;
+
+  --color-due: #b42318;
+  --color-due-soft: #fef3f2;
+  --color-paid: #067647;
+  --color-paid-soft: #ecfdf3;
+
+  --radius-card: 16px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background: var(--color-surface);
   color: var(--color-ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", "Noto Sans Telugu", sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv05", "ss01";
 }
 
+/** Money and phone numbers line up column-wise. */
 .tnum {
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.display-amount {
+  font-size: 2.5rem;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+
+.card {
+  background: var(--color-card);
+  border-radius: var(--radius-card);
+  box-shadow:
+    0 1px 2px rgb(16 24 40 / 0.05),
+    0 0 0 1px rgb(16 24 40 / 0.05);
+}
+
+.card-raised {
+  box-shadow:
+    0 6px 16px -4px rgb(16 24 40 / 0.1),
+    0 2px 6px -2px rgb(16 24 40 / 0.06),
+    0 0 0 1px rgb(16 24 40 / 0.04);
+}
+
+.brand-gradient {
+  background:
+    radial-gradient(120% 140% at 85% -10%, rgb(255 255 255 / 0.12) 0%, transparent 55%),
+    linear-gradient(160deg, var(--color-brand) 0%, var(--color-brand-deep) 100%);
+}
+
+.hairline-top {
+  border-top: 1px solid var(--color-hairline);
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/** The customer statement prints on its own, without the rest of the page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
 }

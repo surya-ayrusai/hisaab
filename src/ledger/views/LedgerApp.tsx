@@ -1,15 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Sheet } from "@/ui/Sheet";
-import type { CustomerRecord, EntryRecord } from "../data/db";
+import { resolveEffectiveDate, type EffectiveDate } from "@/platform/dates";
+import { Avatar, ChevronRightIcon, ClockIcon, PlusIcon, SearchIcon, SettingsIcon, WhatsAppIcon } from "@/ui/icons";
+import type { EntryRecord } from "../data/db";
 import type { LedgerSnapshot } from "../data/ledgerRepo";
 import { balancesByCustomer, compareNewestFirst, countWithDues, totalOutstanding, type EntryType } from "../domain/balance";
-import { resolveEffectiveDate, type EffectiveDate } from "@/platform/dates";
 import type { Rejection } from "../domain/importPlan";
 import { formatIndianRupees, formatPlainRupees } from "../domain/money";
 import { buildWhatsAppUrl } from "../domain/reminder";
 import { AddCustomerSheet, EntrySheet } from "./forms";
+import {
+  AgeingSheet,
+  CustomerDetailSheet,
+  EntryLine,
+  SettingsSheet,
+  ShotSheet,
+  StatementSheet,
+  formatDate,
+} from "./sheets";
 import { useLedger } from "./useLedger";
 
 type SheetState =
@@ -17,6 +26,9 @@ type SheetState =
   | { kind: "add-customer" }
   | { kind: "entry"; customerId: string; type: EntryType | null }
   | { kind: "detail"; customerId: string }
+  | { kind: "statement"; customerId: string }
+  | { kind: "ageing" }
+  | { kind: "settings" }
   | { kind: "shot"; url: string };
 
 interface Toast {
@@ -30,63 +42,6 @@ interface ImportResult {
   rejected: Rejection[];
   warnings: string[];
   snapshot?: LedgerSnapshot;
-}
-
-function formatDate(iso: string): string {
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return `${Number(iso.slice(8, 10))} ${months[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`;
-}
-
-function EntryLine({
-  entry,
-  customerName,
-  shotUrl,
-  onViewShot,
-  onCancel,
-}: {
-  entry: EntryRecord;
-  customerName?: string;
-  shotUrl?: string;
-  onViewShot: (url: string) => void;
-  onCancel?: (entry: EntryRecord) => void;
-}) {
-  const cancelled = entry.status === "cancelled";
-  const isCredit = entry.type === "credit";
-  return (
-    <li data-entry={entry.id} data-entry-type={entry.type} className="flex items-start gap-3 py-3">
-      <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${cancelled ? "text-muted line-through" : ""}`}>
-          {customerName ? `${customerName} · ` : ""}
-          {isCredit ? "Credit" : "Payment"}
-          {entry.kind === "opening" ? " (opening balance)" : ""}
-        </p>
-        <p className="text-sm text-muted">
-          {formatDate(entry.date)}
-          {entry.note ? ` · ${entry.note}` : ""}
-        </p>
-        {cancelled && <p className="text-xs text-muted">Cancelled{entry.cancelReason ? ` · ${entry.cancelReason}` : ""}</p>}
-        {!cancelled && onCancel && (
-          <button type="button" className="mt-1 min-h-11 text-sm font-semibold text-muted underline" onClick={() => onCancel(entry)}>
-            Cancel this entry
-          </button>
-        )}
-      </div>
-      {shotUrl && (
-        <button type="button" onClick={() => onViewShot(shotUrl)} className="shrink-0" aria-label="View payment screenshot">
-          {/* eslint-disable-next-line @next/next/no-img-element -- local blob from the browser database */}
-          <img
-            data-shot={entry.id}
-            src={shotUrl}
-            alt={`Payment screenshot for ₹${formatIndianRupees(entry.amountPaise)} on ${formatDate(entry.date)}`}
-            className="h-12 w-12 rounded-lg border border-line object-cover"
-          />
-        </button>
-      )}
-      <p className={`tnum shrink-0 text-base font-bold ${cancelled ? "text-muted line-through" : isCredit ? "text-due" : "text-paid"}`}>
-        {isCredit ? "+" : "−"} ₹{formatIndianRupees(entry.amountPaise)}
-      </p>
-    </li>
-  );
 }
 
 export function LedgerApp() {
@@ -145,8 +100,8 @@ export function LedgerApp() {
 
   if (loadError) {
     return (
-      <main className="mx-auto w-full max-w-[720px] px-4 py-8">
-        <h1 className="text-2xl font-bold">HISAAB</h1>
+      <main className="mx-auto w-full max-w-[720px] px-4 py-10">
+        <h1 className="text-2xl font-extrabold tracking-tight">HISAAB</h1>
         <p className="mt-3 text-base text-due">{loadError}</p>
       </main>
     );
@@ -154,8 +109,8 @@ export function LedgerApp() {
 
   if (!state || !view || !effective) {
     return (
-      <main className="mx-auto w-full max-w-[720px] px-4 py-8" aria-busy="true">
-        <h1 className="text-2xl font-bold">HISAAB</h1>
+      <main className="mx-auto w-full max-w-[720px] px-4 py-10" aria-busy="true">
+        <h1 className="text-2xl font-extrabold tracking-tight">HISAAB</h1>
         <p className="mt-3 text-base text-muted">Opening your ledger…</p>
       </main>
     );
@@ -164,6 +119,10 @@ export function LedgerApp() {
   const { settings, shotUrls } = state;
   const close = () => setSheet({ kind: "none" });
   const viewShot = (url: string) => setSheet({ kind: "shot", url });
+  const sheetCustomer =
+    sheet.kind === "entry" || sheet.kind === "detail" || sheet.kind === "statement"
+      ? (view.byId.get(sheet.customerId) ?? null)
+      : null;
 
   async function cancelEntry(entry: EntryRecord) {
     if (!window.confirm("Cancel this entry? It will stay in the history but will no longer count.")) return;
@@ -187,7 +146,8 @@ export function LedgerApp() {
       const summary = `${outcome.created} customers added, ${outcome.matched} already in ledger, ${outcome.added} entries added, ${outcome.skipped} skipped as duplicates, ${outcome.rejected} rejected.`;
       setImportResult({
         tone: "ok",
-        text: outcome.mode === "demo-replace" ? `Sample data was replaced by your import. ${summary}` : `Import complete. ${summary}`,
+        text:
+          outcome.mode === "demo-replace" ? `Sample data was replaced by your import. ${summary}` : `Import complete. ${summary}`,
         rejected: plan.rejected,
         warnings: plan.warnings,
         snapshot: outcome.snapshot,
@@ -199,10 +159,11 @@ export function LedgerApp() {
     }
   }
 
-  async function undoImport(snapshot: LedgerSnapshot) {
+  async function undoSnapshot(snapshot: LedgerSnapshot, message: string) {
     await repo.restoreSnapshot(snapshot);
     await reload();
-    setImportResult({ tone: "ok", text: "Import undone. Your ledger is as it was before.", rejected: [], warnings: [] });
+    setImportResult(null);
+    setToast({ text: message });
   }
 
   async function clearSample() {
@@ -211,28 +172,67 @@ export function LedgerApp() {
     await reload();
   }
 
-  const sheetCustomer =
-    sheet.kind === "entry" || sheet.kind === "detail" ? (view.byId.get(sheet.customerId) ?? null) : null;
-
   return (
     <>
-      <header className="bg-brand text-white">
-        <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3 px-4 py-3">
+      <header className="brand-gradient pb-16 text-white">
+        <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3 px-4 pt-4">
           <div className="min-w-0">
-            <p className="text-xl font-bold leading-tight">HISAAB</p>
-            <p className="truncate text-sm opacity-90">{settings.shopName}</p>
+            <p className="text-xl font-extrabold leading-none tracking-[0.14em]">HISAAB</p>
+            <p className="mt-1.5 truncate text-sm text-white/70">{settings.shopName}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setSheet({ kind: "settings" })}
+            aria-label="Settings and data"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+          >
+            <SettingsIcon />
+          </button>
         </div>
       </header>
 
-      <main id="ledger" className="mx-auto w-full max-w-[720px] flex-1 px-4 pb-10">
+      <main id="ledger" className="mx-auto -mt-12 w-full max-w-[720px] flex-1 px-4 pb-12">
+        <section aria-label="Total to collect" className="card card-raised p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.1em] text-muted">Total to collect</p>
+              <p id="total-outstanding" className="display-amount tnum mt-1.5 text-due">
+                Rs {formatIndianRupees(view.total)}
+              </p>
+            </div>
+            <span className="mt-1 h-7 rounded-full bg-gold-soft px-2.5 text-xs font-bold leading-7 text-gold">
+              {formatDate(effective.today)}
+            </span>
+          </div>
+          <div className="mt-4 flex items-stretch gap-3 border-t border-hairline pt-3">
+            <div className="flex-1">
+              <p className="tnum text-lg font-extrabold">{state.customers.length}</p>
+              <p className="text-xs font-semibold text-muted">
+                {state.customers.length === 1 ? "Customer" : "Customers"}
+              </p>
+            </div>
+            <div className="flex-1 border-l border-hairline pl-3">
+              <p className="tnum text-lg font-extrabold text-due">{view.withDues}</p>
+              <p className="text-xs font-semibold text-muted">With dues</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSheet({ kind: "ageing" })}
+              className="flex items-center gap-1 self-center rounded-xl bg-brand-soft px-3 py-2 text-sm font-bold text-brand transition hover:brightness-95"
+            >
+              <ClockIcon className="h-4 w-4" />
+              Dues by age
+            </button>
+          </div>
+        </section>
+
         {effective.overridden && (
-          <p className="mt-3 rounded-lg bg-white px-3 py-2 text-sm text-muted ring-1 ring-line">
+          <p className="mt-3 rounded-xl bg-gold-soft px-3 py-2 text-sm font-semibold text-gold">
             Showing as if today is {formatDate(effective.today)}.
           </p>
         )}
         {settings.isDemoData && (
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-white px-3 py-2 ring-1 ring-line">
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-3 py-2">
             <p className="text-sm text-muted">Sample data, for a quick look.</p>
             <button type="button" onClick={clearSample} className="min-h-11 shrink-0 text-sm font-bold text-brand underline">
               Clear sample data
@@ -240,105 +240,117 @@ export function LedgerApp() {
           </div>
         )}
 
-        <section aria-label="Total to collect" className="mt-3 rounded-2xl bg-white p-4 ring-1 ring-line">
-          <p className="text-sm font-semibold text-muted">Total to collect</p>
-          <p id="total-outstanding" className="tnum mt-1 text-4xl font-extrabold text-due">
-            Rs {formatIndianRupees(view.total)}
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            {state.customers.length} {state.customers.length === 1 ? "customer" : "customers"} · {view.withDues} with dues
-          </p>
-        </section>
-
-        <section aria-label="Customers" className="mt-4">
+        <section aria-label="Customers" className="mt-5">
           <div className="flex gap-2">
             <label htmlFor="customer-search" className="sr-only">
               Search name or phone
             </label>
-            <input
-              id="customer-search"
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or phone"
-              className="min-h-12 min-w-0 flex-1 rounded-xl border border-line bg-white px-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
-            />
+            <div className="relative min-w-0 flex-1">
+              <SearchIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-faint" />
+              <input
+                id="customer-search"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search customer"
+                className="min-h-12 w-full rounded-xl border border-line bg-card pl-10 pr-3 text-base outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10"
+              />
+            </div>
             <button
               type="button"
               onClick={() => setSheet({ kind: "add-customer" })}
-              className="min-h-12 shrink-0 rounded-xl bg-brand px-4 text-base font-bold text-white"
+              aria-label="Add customer"
+              className="flex min-h-12 shrink-0 items-center gap-1 rounded-xl bg-brand px-4 text-base font-bold text-white shadow-sm transition hover:bg-brand-deep"
             >
-              + Customer
+              <PlusIcon className="h-5 w-5" />
+              Customer
             </button>
           </div>
-          <div className="mt-2 flex items-center gap-2 text-sm">
-            <label htmlFor="customer-sort" className="text-muted">
-              Show first
-            </label>
-            <select
-              id="customer-sort"
-              value={sort}
-              onChange={(e) => setSort(e.target.value === "due" ? "due" : "newest")}
-              className="min-h-11 rounded-lg border border-line bg-white px-2 font-semibold"
-            >
-              <option value="newest">Newest customers</option>
-              <option value="due">Highest dues</option>
-            </select>
+
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <h2 className="text-base font-bold">
+              {search.trim() === "" ? "All customers" : `Results for “${search.trim()}”`}
+            </h2>
+            <div className="flex items-center gap-2 text-sm">
+              <label htmlFor="customer-sort" className="text-muted">
+                Show first
+              </label>
+              <select
+                id="customer-sort"
+                value={sort}
+                onChange={(e) => setSort(e.target.value === "due" ? "due" : "newest")}
+                className="min-h-10 rounded-lg border border-line bg-card px-2 font-semibold outline-none"
+              >
+                <option value="newest">Newest</option>
+                <option value="due">Highest dues</option>
+              </select>
+            </div>
           </div>
 
           {state.customers.length === 0 ? (
-            <div className="mt-4 rounded-2xl bg-white p-6 text-center ring-1 ring-line">
-              <p className="text-base font-semibold">No customers yet.</p>
+            <div className="card mt-3 p-8 text-center">
+              <p className="text-base font-bold">No customers yet.</p>
               <p className="mt-1 text-sm text-muted">Add your first customer to start your ledger.</p>
+              <button
+                type="button"
+                onClick={() => setSheet({ kind: "add-customer" })}
+                className="mx-auto mt-4 flex min-h-12 items-center gap-1 rounded-xl bg-brand px-5 text-base font-bold text-white"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Add customer
+              </button>
             </div>
           ) : view.rows.length === 0 ? (
             <p className="mt-4 text-sm text-muted">No customer matches “{search}”.</p>
           ) : (
-            <ul className="mt-3 space-y-2">
+            <ul className="mt-3 space-y-2.5">
               {view.rows.map((customer) => {
                 const balance = view.balances.get(customer.id) ?? 0;
                 const remindUrl = buildWhatsAppUrl(customer.phone, {
                   customerName: customer.name,
                   shopName: settings.shopName,
                   balancePaise: balance,
-                  language: settings.reminderLanguage,
                   tone: settings.reminderTone,
                 });
                 return (
-                  <li key={customer.id} data-customer={customer.phone} className="rounded-2xl bg-white p-3 ring-1 ring-line">
-                    <div className="flex items-start justify-between gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSheet({ kind: "detail", customerId: customer.id })}
-                        className="min-h-11 min-w-0 flex-1 text-left"
-                      >
+                  <li key={customer.id} data-customer={customer.phone} className="card overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setSheet({ kind: "detail", customerId: customer.id })}
+                      className="flex w-full items-center gap-3 p-3.5 text-left transition hover:bg-hairline/60"
+                    >
+                      <Avatar name={customer.name} />
+                      <span className="min-w-0 flex-1">
                         <span className="block truncate text-base font-bold">{customer.name}</span>
                         <span className="tnum block text-sm text-muted">{customer.phone}</span>
-                      </button>
-                      <p className="shrink-0 text-right">
+                      </span>
+                      <span className="shrink-0 text-right">
                         <span
-                          className={`tnum text-xl font-extrabold ${balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-muted"}`}
+                          className={`tnum block text-xl font-extrabold ${
+                            balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-faint"
+                          }`}
                         >
-                          <span aria-hidden="true">₹ </span>
+                          <span aria-hidden="true">₹</span>
                           <span data-balance>{formatPlainRupees(balance)}</span>
                         </span>
-                        <span className="block text-xs font-semibold text-muted">
-                          {balance > 0 ? "Due" : balance < 0 ? "Advance" : "Nothing due"}
+                        <span className="block text-xs font-bold uppercase tracking-wide text-muted">
+                          {balance > 0 ? "Due" : balance < 0 ? "Advance" : "Settled"}
                         </span>
-                      </p>
-                    </div>
-                    <div className="mt-2 flex gap-2">
+                      </span>
+                      <ChevronRightIcon className="h-5 w-5 shrink-0 text-faint" />
+                    </button>
+                    <div className="hairline-top flex">
                       <button
                         type="button"
                         onClick={() => setSheet({ kind: "entry", customerId: customer.id, type: "credit" })}
-                        className="min-h-11 flex-1 rounded-xl border-2 border-due px-2 text-sm font-bold text-due"
+                        className="min-h-12 flex-1 text-sm font-bold text-due transition hover:bg-due-soft"
                       >
                         Credit
                       </button>
                       <button
                         type="button"
                         onClick={() => setSheet({ kind: "entry", customerId: customer.id, type: "payment" })}
-                        className="min-h-11 flex-1 rounded-xl border-2 border-paid px-2 text-sm font-bold text-paid"
+                        className="min-h-12 flex-1 border-l border-hairline text-sm font-bold text-paid transition hover:bg-paid-soft"
                       >
                         Payment
                       </button>
@@ -348,8 +360,9 @@ export function LedgerApp() {
                           href={remindUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex min-h-11 flex-1 items-center justify-center rounded-xl bg-paid px-2 text-sm font-bold text-white"
+                          className="flex min-h-12 flex-1 items-center justify-center gap-1.5 border-l border-hairline text-sm font-bold text-brand transition hover:bg-brand-soft"
                         >
+                          <WhatsAppIcon className="h-4 w-4" />
                           WhatsApp
                         </a>
                       )}
@@ -362,9 +375,9 @@ export function LedgerApp() {
         </section>
 
         {view.recent.length > 0 && (
-          <section aria-label="Recent entries" className="mt-6">
+          <section aria-label="Recent entries" className="mt-7">
             <h2 className="text-base font-bold">Recent entries</h2>
-            <ul className="mt-1 divide-y divide-line rounded-2xl bg-white px-3 ring-1 ring-line">
+            <ul className="card mt-2 divide-y divide-hairline px-4">
               {view.recent.map((entry) => (
                 <EntryLine
                   key={entry.id}
@@ -378,11 +391,11 @@ export function LedgerApp() {
           </section>
         )}
 
-        <section aria-label="Bring in data" className="mt-6 rounded-2xl bg-white p-4 ring-1 ring-line">
+        <section aria-label="Bring in data" className="card mt-7 p-4">
           <h2 className="text-base font-bold">Bring in data</h2>
           <p className="mt-1 text-sm text-muted">
-            Paste a ledger file (JSON) and press Import. New customers and entries are added. Anything already in your ledger
-            is skipped, and you can undo the import.
+            Paste a ledger file (JSON) and press Import. New customers and entries are added, anything already in your
+            ledger is skipped, and you can undo the import.
           </p>
           <label htmlFor="import-box" className="sr-only">
             Ledger data in JSON
@@ -394,14 +407,14 @@ export function LedgerApp() {
             rows={5}
             spellCheck={false}
             placeholder='{"shop": "...", "customers": [...], "entries": [...]}'
-            className="mt-2 block w-full rounded-xl border border-line bg-surface p-3 font-mono text-sm outline-none focus:border-brand focus:ring-2 focus:ring-brand/30"
+            className="mt-3 block w-full rounded-xl border border-line bg-surface p-3 font-mono text-sm outline-none transition focus:border-brand focus:ring-4 focus:ring-brand/10"
           />
           <button
             id="import-go"
             type="button"
             onClick={runImport}
             disabled={importBusy}
-            className="mt-2 min-h-12 w-full rounded-xl bg-brand px-4 text-base font-bold text-white disabled:opacity-60"
+            className="mt-2.5 min-h-12 w-full rounded-xl bg-brand px-4 text-base font-bold text-white shadow-sm transition hover:bg-brand-deep disabled:opacity-60"
           >
             {importBusy ? "Importing…" : "Import"}
           </button>
@@ -409,9 +422,11 @@ export function LedgerApp() {
             <div
               role="status"
               data-import-result={importResult.tone}
-              className={`mt-3 rounded-xl p-3 text-sm ${importResult.tone === "ok" ? "bg-paid/10 text-ink" : "bg-due/10 text-due"}`}
+              className={`mt-3 rounded-xl p-3 text-sm ${
+                importResult.tone === "ok" ? "bg-paid-soft text-ink" : "bg-due-soft text-due"
+              }`}
             >
-              <p className="font-semibold">{importResult.text}</p>
+              <p className="font-bold">{importResult.text}</p>
               {importResult.warnings.map((w) => (
                 <p key={w} className="mt-1">
                   {w}
@@ -430,7 +445,7 @@ export function LedgerApp() {
               {importResult.snapshot && (
                 <button
                   type="button"
-                  onClick={() => undoImport(importResult.snapshot!)}
+                  onClick={() => undoSnapshot(importResult.snapshot!, "Import undone. Your ledger is as it was before.")}
                   className="mt-2 min-h-11 font-bold text-brand underline"
                 >
                   Undo this import
@@ -440,9 +455,9 @@ export function LedgerApp() {
           )}
         </section>
 
-        <p className="mt-4 text-sm text-muted">
+        <p className="mt-5 text-sm text-muted">
           Your ledger is stored only in this browser on this device. It is not saved on any server and will not appear on
-          another phone. Clearing browser data will erase it.
+          another phone. Clearing browser data will erase it, so download a backup from Settings.
         </p>
       </main>
 
@@ -450,6 +465,7 @@ export function LedgerApp() {
         <AddCustomerSheet
           repo={repo}
           existing={state.customers}
+          today={effective.today}
           onClose={close}
           onOpenExisting={(c) => setSheet({ kind: "detail", customerId: c.id })}
           onSaved={async (c) => {
@@ -483,37 +499,78 @@ export function LedgerApp() {
       )}
 
       {sheet.kind === "detail" && sheetCustomer && (
-        <CustomerDetail
+        <CustomerDetailSheet
           customer={sheetCustomer}
           balance={view.balances.get(sheetCustomer.id) ?? 0}
           entries={state.entries.filter((e) => e.customerId === sheetCustomer.id).sort(compareNewestFirst)}
+          settings={settings}
           shotUrls={shotUrls}
           onClose={close}
           onEntry={(type) => setSheet({ kind: "entry", customerId: sheetCustomer.id, type })}
           onCancel={cancelEntry}
           onViewShot={viewShot}
+          onStatement={() => setSheet({ kind: "statement", customerId: sheetCustomer.id })}
         />
       )}
 
-      {sheet.kind === "shot" && (
-        <Sheet title="Payment screenshot" onClose={close}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- local blob from the browser database */}
-          <img src={sheet.url} alt="Payment screenshot, full size" className="mx-auto max-h-[75dvh] w-auto rounded-lg" />
-        </Sheet>
+      {sheet.kind === "statement" && sheetCustomer && (
+        <StatementSheet
+          customer={sheetCustomer}
+          entries={state.entries.filter((e) => e.customerId === sheetCustomer.id)}
+          settings={settings}
+          today={effective.today}
+          onClose={() => setSheet({ kind: "detail", customerId: sheetCustomer.id })}
+        />
       )}
 
+      {sheet.kind === "ageing" && (
+        <AgeingSheet
+          customers={state.customers}
+          entries={state.entries}
+          today={effective.today}
+          onClose={close}
+          onOpenCustomer={(c) => setSheet({ kind: "detail", customerId: c.id })}
+        />
+      )}
+
+      {sheet.kind === "settings" && (
+        <SettingsSheet
+          repo={repo}
+          settings={settings}
+          customerCount={state.customers.length}
+          onClose={close}
+          onChanged={reload}
+          onRestored={async (message, snapshot) => {
+            await reload();
+            close();
+            setToast({
+              text: message,
+              undo: async () => {
+                await repo.restoreSnapshot(snapshot);
+                await reload();
+              },
+            });
+          }}
+        />
+      )}
+
+      {sheet.kind === "shot" && <ShotSheet url={sheet.url} onClose={close} />}
+
       {toast && (
-        <div role="status" className="pointer-events-none fixed inset-x-0 bottom-4 z-50 mx-auto flex w-[calc(100%-2rem)] max-w-[560px] items-center justify-between gap-3 rounded-xl bg-ink px-4 py-3 text-white shadow-lg">
+        <div
+          role="status"
+          className="pointer-events-none fixed inset-x-0 bottom-4 z-50 mx-auto flex w-[calc(100%-2rem)] max-w-[560px] items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-white shadow-2xl"
+        >
           <p className="text-sm font-semibold">{toast.text}</p>
           {toast.undo && (
             <button
               type="button"
-              className="pointer-events-auto min-h-11 shrink-0 px-2 text-sm font-extrabold underline"
+              className="pointer-events-auto min-h-11 shrink-0 px-2 text-sm font-extrabold text-gold underline"
               onClick={async () => {
                 const undo = toast.undo!;
                 setToast(null);
                 await undo();
-                setToast({ text: "Undone. The entry is cancelled." });
+                setToast({ text: "Undone." });
               }}
             >
               Undo
@@ -522,53 +579,5 @@ export function LedgerApp() {
         </div>
       )}
     </>
-  );
-}
-
-function CustomerDetail({
-  customer,
-  balance,
-  entries,
-  shotUrls,
-  onClose,
-  onEntry,
-  onCancel,
-  onViewShot,
-}: {
-  customer: CustomerRecord;
-  balance: number;
-  entries: EntryRecord[];
-  shotUrls: Map<string, string>;
-  onClose: () => void;
-  onEntry: (type: EntryType) => void;
-  onCancel: (entry: EntryRecord) => void;
-  onViewShot: (url: string) => void;
-}) {
-  return (
-    <Sheet title={customer.name} onClose={onClose}>
-      <p className="tnum text-sm text-muted">{customer.phone}</p>
-      <p className={`tnum mt-2 text-3xl font-extrabold ${balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-muted"}`}>
-        ₹ {formatIndianRupees(Math.abs(balance))}
-      </p>
-      <p className="text-sm font-semibold text-muted">{balance > 0 ? "Due" : balance < 0 ? "Advance paid by customer" : "Nothing due"}</p>
-      <div className="mt-3 flex gap-2">
-        <button type="button" onClick={() => onEntry("credit")} className="min-h-12 flex-1 rounded-xl bg-due px-2 text-base font-bold text-white">
-          Credit
-        </button>
-        <button type="button" onClick={() => onEntry("payment")} className="min-h-12 flex-1 rounded-xl bg-paid px-2 text-base font-bold text-white">
-          Payment
-        </button>
-      </div>
-      <h3 className="mt-4 text-base font-bold">History</h3>
-      {entries.length === 0 ? (
-        <p className="mt-1 text-sm text-muted">No entries yet.</p>
-      ) : (
-        <ul className="divide-y divide-line">
-          {entries.map((entry) => (
-            <EntryLine key={entry.id} entry={entry} shotUrl={shotUrls.get(entry.id)} onViewShot={onViewShot} onCancel={onCancel} />
-          ))}
-        </ul>
-      )}
-    </Sheet>
   );
 }

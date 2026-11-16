@@ -2,36 +2,38 @@
 
 import { useState, type FormEvent } from "react";
 import { Sheet } from "@/ui/Sheet";
+import { errorClass, hintClass, inputClass, labelClass, primaryButton } from "@/ui/field";
 import { prepareShot } from "@/platform/image";
+import { isValidIsoDate } from "@/platform/dates";
 import type { CustomerRecord, EntryRecord } from "../data/db";
 import { LedgerError, type LedgerRepo } from "../data/ledgerRepo";
 import type { EntryType } from "../domain/balance";
-import { isValidIsoDate } from "@/platform/dates";
 import { formatIndianRupees, parseRupeesToPaise } from "../domain/money";
 import { normalizePhone } from "../domain/phone";
-
-const inputClass =
-  "mt-1 block min-h-12 w-full rounded-xl border border-line bg-white px-3 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/30";
-const labelClass = "block text-sm font-semibold text-ink";
-const errorClass = "mt-1 text-sm font-medium text-due";
 
 export function AddCustomerSheet({
   repo,
   existing,
+  today,
   onClose,
   onSaved,
   onOpenExisting,
 }: {
   repo: LedgerRepo;
   existing: CustomerRecord[];
+  today: string;
   onClose: () => void;
   onSaved: (customer: CustomerRecord) => void;
   onOpenExisting: (customer: CustomerRecord) => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [showOpening, setShowOpening] = useState(false);
+  const [openingAmount, setOpeningAmount] = useState("");
+  const [openingDate, setOpeningDate] = useState(today);
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [openingError, setOpeningError] = useState("");
   const [duplicate, setDuplicate] = useState<CustomerRecord | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -40,7 +42,9 @@ export function AddCustomerSheet({
     if (saving) return;
     setNameError("");
     setPhoneError("");
+    setOpeningError("");
     setDuplicate(null);
+
     const cleanName = name.trim();
     const cleanPhone = normalizePhone(phone);
     let bad = false;
@@ -52,7 +56,22 @@ export function AddCustomerSheet({
       setPhoneError("Enter a 10-digit mobile number starting with 6, 7, 8 or 9.");
       bad = true;
     }
+
+    let opening: { amountPaise: number; date: string } | undefined;
+    if (showOpening && openingAmount.trim() !== "") {
+      const paise = parseRupeesToPaise(openingAmount);
+      if (paise === null) {
+        setOpeningError("Enter an amount more than zero.");
+        bad = true;
+      } else if (!isValidIsoDate(openingDate)) {
+        setOpeningError("Choose a valid date.");
+        bad = true;
+      } else {
+        opening = { amountPaise: paise, date: openingDate };
+      }
+    }
     if (bad || !cleanPhone) return;
+
     const found = existing.find((c) => c.phone === cleanPhone);
     if (found) {
       setDuplicate(found);
@@ -60,7 +79,7 @@ export function AddCustomerSheet({
     }
     setSaving(true);
     try {
-      onSaved(await repo.addCustomer({ name: cleanName, phone: cleanPhone }));
+      onSaved(await repo.addCustomer({ name: cleanName, phone: cleanPhone, opening }));
     } catch (err) {
       setPhoneError(err instanceof LedgerError ? err.message : "Could not save. Please try again.");
       setSaving(false);
@@ -69,7 +88,7 @@ export function AddCustomerSheet({
 
   return (
     <Sheet title="Add customer" onClose={onClose}>
-      <form onSubmit={submit} noValidate className="space-y-4">
+      <form onSubmit={submit} noValidate className="space-y-5">
         <div>
           <label htmlFor="customer-name" className={labelClass}>
             Name
@@ -81,18 +100,20 @@ export function AddCustomerSheet({
             maxLength={60}
             autoComplete="off"
             autoFocus
+            placeholder="Customer name"
             onChange={(e) => setName(e.target.value)}
             aria-invalid={nameError !== ""}
           />
           {nameError && <p className={errorClass}>{nameError}</p>}
         </div>
+
         <div>
           <label htmlFor="customer-phone" className={labelClass}>
             Mobile number
           </label>
           <input
             id="customer-phone"
-            className={inputClass}
+            className={`${inputClass} tnum`}
             value={phone}
             inputMode="tel"
             autoComplete="off"
@@ -104,17 +125,61 @@ export function AddCustomerSheet({
           {duplicate && (
             <p className={errorClass}>
               This number is already in your ledger as {duplicate.name}.{" "}
-              <button type="button" className="underline" onClick={() => onOpenExisting(duplicate)}>
+              <button type="button" className="font-bold underline" onClick={() => onOpenExisting(duplicate)}>
                 Open
               </button>
             </p>
           )}
         </div>
-        <button
-          type="submit"
-          disabled={saving}
-          className="min-h-12 w-full rounded-xl bg-brand px-4 text-base font-bold text-white disabled:opacity-60"
-        >
+
+        <div className="rounded-xl border border-line bg-surface p-3.5">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={showOpening}
+              onChange={(e) => setShowOpening(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 rounded border-line accent-[#0b4f43]"
+            />
+            <span>
+              <span className="block text-sm font-semibold text-body">This customer already owes money</span>
+              <span className="block text-sm text-muted">
+                Carry a balance over from your notebook. It is recorded once, as an opening balance.
+              </span>
+            </span>
+          </label>
+          {showOpening && (
+            <div className="mt-3 flex gap-3">
+              <div className="flex-1">
+                <label htmlFor="opening-amount" className={labelClass}>
+                  Amount already due (₹)
+                </label>
+                <input
+                  id="opening-amount"
+                  className={`${inputClass} tnum`}
+                  value={openingAmount}
+                  inputMode="decimal"
+                  placeholder="0"
+                  onChange={(e) => setOpeningAmount(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="opening-date" className={labelClass}>
+                  Owed since
+                </label>
+                <input
+                  id="opening-date"
+                  type="date"
+                  className={inputClass}
+                  value={openingDate}
+                  onChange={(e) => setOpeningDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {openingError && <p className={errorClass}>{openingError}</p>}
+        </div>
+
+        <button type="submit" disabled={saving} className={primaryButton}>
           {saving ? "Saving…" : "Save customer"}
         </button>
       </form>
@@ -122,7 +187,7 @@ export function AddCustomerSheet({
   );
 }
 
-/** The entry form. With "Payment" selected this is the payment form and carries the screenshot input. */
+/** The entry form. With Payment chosen this is the payment form, and it carries the screenshot input. */
 export function EntrySheet({
   repo,
   customer,
@@ -180,48 +245,59 @@ export function EntrySheet({
     }
   }
 
-  const typeButton = (value: EntryType, label: string, active: string) => (
+  const typeButton = (value: EntryType, label: string, hint: string, active: string) => (
     <button
       type="button"
       aria-pressed={type === value}
       onClick={() => setType(value)}
-      className={`min-h-12 flex-1 rounded-xl border-2 px-3 text-base font-bold ${
-        type === value ? active : "border-line bg-white text-ink"
+      className={`flex min-h-16 flex-1 flex-col items-center justify-center rounded-xl border-2 px-2 transition ${
+        type === value ? active : "border-line bg-card text-body hover:bg-surface"
       }`}
     >
-      {label}
+      <span className="text-base font-bold">{label}</span>
+      <span className="text-xs opacity-80">{hint}</span>
     </button>
   );
 
   return (
-    <Sheet title={customer.name} onClose={onClose}>
-      <p className="mb-3 text-sm text-muted">
-        {balancePaise > 0
+    <Sheet
+      title={customer.name}
+      subtitle={
+        balancePaise > 0
           ? `Owes ₹${formatIndianRupees(balancePaise)}`
           : balancePaise < 0
-            ? `Advance of ₹${formatIndianRupees(-balancePaise)}`
-            : "Nothing due"}
-      </p>
-      <form onSubmit={submit} noValidate className="space-y-4" data-form={type === "payment" ? "payment" : "entry"}>
-        <div className="flex gap-2" role="group" aria-label="Entry type">
-          {typeButton("credit", "Credit given", "border-due bg-due text-white")}
-          {typeButton("payment", "Payment received", "border-paid bg-paid text-white")}
+            ? `In advance by ₹${formatIndianRupees(-balancePaise)}`
+            : "Nothing due"
+      }
+      onClose={onClose}
+    >
+      <form onSubmit={submit} noValidate className="space-y-5" data-form={type === "payment" ? "payment" : "entry"}>
+        <div className="flex gap-3" role="group" aria-label="Entry type">
+          {typeButton("credit", "Credit", "goods given", "border-due bg-due text-white")}
+          {typeButton("payment", "Payment", "money received", "border-paid bg-paid text-white")}
         </div>
+
         <div>
           <label htmlFor="entry-amount" className={labelClass}>
-            Amount (₹)
+            Amount
           </label>
-          <input
-            id="entry-amount"
-            className={`${inputClass} tnum text-2xl font-bold`}
-            value={amount}
-            inputMode="decimal"
-            autoComplete="off"
-            autoFocus
-            placeholder="0"
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted">
+              ₹
+            </span>
+            <input
+              id="entry-amount"
+              className={`${inputClass} tnum min-h-16 pl-10 text-3xl font-extrabold`}
+              value={amount}
+              inputMode="decimal"
+              autoComplete="off"
+              autoFocus
+              placeholder="0"
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
         </div>
+
         <div className="flex gap-3">
           <div className="flex-1">
             <label htmlFor="entry-date" className={labelClass}>
@@ -231,40 +307,50 @@ export function EntrySheet({
           </div>
           <div className="flex-1">
             <label htmlFor="entry-note" className={labelClass}>
-              Note (optional)
+              Note <span className="font-normal text-muted">(optional)</span>
             </label>
-            <input id="entry-note" className={inputClass} value={note} maxLength={80} onChange={(e) => setNote(e.target.value)} />
+            <input
+              id="entry-note"
+              className={inputClass}
+              value={note}
+              maxLength={80}
+              placeholder="groceries"
+              onChange={(e) => setNote(e.target.value)}
+            />
           </div>
         </div>
+
         {type === "payment" && (
           <div>
             <label htmlFor="shot-input" className={labelClass}>
-              Payment screenshot (optional)
+              Payment screenshot <span className="font-normal text-muted">(optional)</span>
             </label>
             <input
               id="shot-input"
               type="file"
               accept="image/jpeg,image/png,image/webp"
-              className="mt-1 block w-full text-sm file:mr-3 file:min-h-11 file:rounded-lg file:border-0 file:bg-surface file:px-3 file:font-semibold"
+              className="mt-1.5 block w-full rounded-xl border border-dashed border-line bg-surface p-3 text-sm text-muted file:mr-3 file:min-h-10 file:rounded-lg file:border-0 file:bg-card file:px-3 file:font-semibold file:text-brand"
               onChange={(e) => {
                 setShotError("");
                 setFile(e.target.files?.[0] ?? null);
               }}
             />
-            {shotError && <p className={errorClass}>{shotError}</p>}
+            {shotError ? <p className={errorClass}>{shotError}</p> : <p className={hintClass}>JPG, PNG or WebP, up to 5 MB.</p>}
           </div>
         )}
+
         {willBeAdvance && (
-          <p className="rounded-lg bg-surface p-2 text-sm text-muted">
+          <p className="rounded-xl bg-paid-soft p-3 text-sm text-body">
             This is more than the amount due. The extra will show as an advance.
           </p>
         )}
         {error && <p className={errorClass}>{error}</p>}
+
         <button
           type="submit"
           disabled={saving}
-          className={`min-h-12 w-full rounded-xl px-4 text-base font-bold text-white disabled:opacity-60 ${
-            type === "payment" ? "bg-paid" : type === "credit" ? "bg-due" : "bg-muted"
+          className={`flex min-h-12 w-full items-center justify-center rounded-xl px-4 text-base font-bold text-white shadow-sm transition disabled:opacity-60 ${
+            type === "payment" ? "bg-paid hover:brightness-110" : type === "credit" ? "bg-due hover:brightness-110" : "bg-muted"
           }`}
         >
           {saving
@@ -273,7 +359,7 @@ export function EntrySheet({
               ? `Save payment${paise ? ` of ₹${formatIndianRupees(paise)}` : ""}`
               : type === "credit"
                 ? `Save credit${paise ? ` of ₹${formatIndianRupees(paise)}` : ""}`
-                : "Save"}
+                : "Choose Credit or Payment"}
         </button>
       </form>
     </Sheet>
