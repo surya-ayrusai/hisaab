@@ -85,11 +85,12 @@ export function PrintIcon({ className = "" }: IconProps) {
 /** A coloured disc with the customer's initial, so rows are easy to scan. */
 export function Avatar({ name }: { name: string }) {
   const letter = name.trim().charAt(0).toUpperCase() || "?";
+  // Deliberately no red tone: red belongs to money owed and nothing else.
   const tones = [
     "bg-brand-soft text-brand",
     "bg-gold-soft text-gold",
     "bg-paid-soft text-paid",
-    "bg-due-soft text-due",
+    "bg-hairline text-body",
   ];
   let sum = 0;
   for (const ch of name) sum += ch.charCodeAt(0);

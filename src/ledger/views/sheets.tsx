@@ -54,7 +54,7 @@ export function EntryLine({
     <li data-entry={entry.id} data-entry-type={entry.type} className="flex items-start gap-3 py-3.5">
       <span
         aria-hidden="true"
-        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
           cancelled ? "bg-hairline text-faint" : isCredit ? "bg-due-soft text-due" : "bg-paid-soft text-paid"
         }`}
       >
@@ -273,7 +273,7 @@ export function AgeingSheet({
 
       <div className="mt-4 flex items-baseline justify-between rounded-xl bg-surface px-3 py-2.5">
         <span className="text-sm font-bold">Total outstanding</span>
-        <span data-ageing-total className="tnum text-lg font-extrabold text-due">
+        <span data-ageing-total className="tnum text-lg font-bold text-due">
           ₹{formatIndianRupees(total)}
         </span>
       </div>
@@ -364,8 +364,8 @@ export function StatementSheet({
 
       <div data-statement className="mt-4 rounded-2xl border border-line p-5">
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-hairline pb-4">
-          <div>
-            <p className="text-lg font-extrabold tracking-tight">{settings.shopName}</p>
+          <div className="min-w-0">
+            <p className="text-lg font-bold tracking-tight">{settings.shopName}</p>
             <p className="text-sm text-muted">Account statement</p>
           </div>
           <div className="text-right text-sm">
@@ -421,13 +421,17 @@ export function StatementSheet({
               <td colSpan={2} className="py-3 font-bold">Closing balance</td>
               <td className="tnum py-3 text-right font-semibold text-due">{formatIndianRupees(totalCredit)}</td>
               <td className="tnum py-3 text-right font-semibold text-paid">{formatIndianRupees(totalPaid)}</td>
-              <td data-statement-closing className="tnum py-3 text-right text-base font-extrabold">
+              <td data-statement-closing className="tnum py-3 text-right text-base font-bold">
                 ₹{formatIndianRupees(closing)}
               </td>
             </tr>
           </tfoot>
         </table>
-        <p className="mt-3 text-xs text-muted">
+        <p className="mt-4 flex items-center gap-1.5 border-t border-hairline pt-3 text-xs text-muted">
+          <span className="wordmark text-[11px] text-brand">HISAAB</span>
+          <span>· kept on the shopkeeper&apos;s device</span>
+        </p>
+        <p className="mt-2 text-xs text-muted">
           {closing > 0
             ? `${customer.name} owes ₹${formatIndianRupees(closing)} as on ${formatDate(to)}.`
             : closing < 0

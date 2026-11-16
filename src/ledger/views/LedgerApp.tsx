@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { resolveEffectiveDate, type EffectiveDate } from "@/platform/dates";
 import { Avatar, ChevronRightIcon, ClockIcon, PlusIcon, SearchIcon, SettingsIcon, WhatsAppIcon } from "@/ui/icons";
+import { Wordmark } from "@/ui/Wordmark";
 import type { EntryRecord } from "../data/db";
 import type { LedgerSnapshot } from "../data/ledgerRepo";
 import { balancesByCustomer, compareNewestFirst, countWithDues, totalOutstanding, type EntryType } from "../domain/balance";
@@ -101,8 +102,8 @@ export function LedgerApp() {
   if (loadError) {
     return (
       <main className="mx-auto w-full max-w-[720px] px-4 py-10">
-        <h1 className="text-2xl font-extrabold tracking-tight">HISAAB</h1>
-        <p className="mt-3 text-base text-due">{loadError}</p>
+        <Wordmark tone="onLight" />
+        <p className="mt-4 text-base text-due">{loadError}</p>
       </main>
     );
   }
@@ -110,8 +111,8 @@ export function LedgerApp() {
   if (!state || !view || !effective) {
     return (
       <main className="mx-auto w-full max-w-[720px] px-4 py-10" aria-busy="true">
-        <h1 className="text-2xl font-extrabold tracking-tight">HISAAB</h1>
-        <p className="mt-3 text-base text-muted">Opening your ledger…</p>
+        <Wordmark tone="onLight" />
+        <p className="mt-4 text-base text-muted">Opening your ledger…</p>
       </main>
     );
   }
@@ -176,10 +177,7 @@ export function LedgerApp() {
     <>
       <header className="brand-gradient pb-16 text-white">
         <div className="mx-auto flex w-full max-w-[720px] items-center justify-between gap-3 px-4 pt-4">
-          <div className="min-w-0">
-            <p className="text-xl font-extrabold leading-none tracking-[0.14em]">HISAAB</p>
-            <p className="mt-1.5 truncate text-sm text-white/70">{settings.shopName}</p>
-          </div>
+          <Wordmark subtitle={settings.shopName} />
           <button
             type="button"
             onClick={() => setSheet({ kind: "settings" })}
@@ -206,13 +204,13 @@ export function LedgerApp() {
           </div>
           <div className="mt-4 flex items-stretch gap-3 border-t border-hairline pt-3">
             <div className="flex-1">
-              <p className="tnum text-lg font-extrabold">{state.customers.length}</p>
+              <p className="tnum text-lg font-bold">{state.customers.length}</p>
               <p className="text-xs font-semibold text-muted">
                 {state.customers.length === 1 ? "Customer" : "Customers"}
               </p>
             </div>
             <div className="flex-1 border-l border-hairline pl-3">
-              <p className="tnum text-lg font-extrabold text-due">{view.withDues}</p>
+              <p className="tnum text-lg font-bold text-due">{view.withDues}</p>
               <p className="text-xs font-semibold text-muted">With dues</p>
             </div>
             <button
@@ -233,9 +231,14 @@ export function LedgerApp() {
         )}
         {settings.isDemoData && (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-3 py-2">
-            <p className="text-sm text-muted">Sample data, for a quick look.</p>
-            <button type="button" onClick={clearSample} className="min-h-11 shrink-0 text-sm font-bold text-brand underline">
-              Clear sample data
+            <p className="min-w-0 text-sm text-muted">Sample data, for a quick look.</p>
+            <button
+              type="button"
+              onClick={clearSample}
+              aria-label="Clear sample data"
+              className="min-h-11 shrink-0 text-sm font-bold text-brand underline"
+            >
+              Clear
             </button>
           </div>
         )}
@@ -326,7 +329,7 @@ export function LedgerApp() {
                       </span>
                       <span className="shrink-0 text-right">
                         <span
-                          className={`tnum block text-xl font-extrabold ${
+                          className={`tnum block text-xl font-bold ${
                             balance > 0 ? "text-due" : balance < 0 ? "text-paid" : "text-faint"
                           }`}
                         >
@@ -565,7 +568,7 @@ export function LedgerApp() {
           {toast.undo && (
             <button
               type="button"
-              className="pointer-events-auto min-h-11 shrink-0 px-2 text-sm font-extrabold text-gold underline"
+              className="pointer-events-auto min-h-11 shrink-0 px-2 text-sm font-bold text-gold underline"
               onClick={async () => {
                 const undo = toast.undo!;
                 setToast(null);

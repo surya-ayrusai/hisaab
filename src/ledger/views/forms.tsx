@@ -287,7 +287,7 @@ export function EntrySheet({
             </span>
             <input
               id="entry-amount"
-              className={`${inputClass} tnum min-h-16 pl-10 text-3xl font-extrabold`}
+              className={`${inputClass} tnum min-h-16 pl-10 text-3xl font-bold`}
               value={amount}
               inputMode="decimal"
               autoComplete="off"
