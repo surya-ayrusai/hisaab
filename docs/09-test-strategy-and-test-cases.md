@@ -34,6 +34,11 @@ A requirement is "Tested — passed" only with a recorded run: date, build, envi
 | TEST-015 | Double-tap Save | One entry | NFR |
 | TEST-016 | Opening balance on new customer | Counted once | FR-024 |
 | TEST-017 | Dues by age on sample at 2026-11-15 | 0–7: 0; 8–15: 0; 16–30: 2,410; 31–60: 9,180; over 60: 230; sum 11,820 | FR-022 |
+| TEST-018 | Opening balance on a new customer | One `kind: "opening"` credit entry; the balance and the total both move by that amount | FR-005 |
+| TEST-019 | Backup export then import into an empty ledger | Same 8 customers, same 38 entries, same total | FR-030 |
+| TEST-020 | Restore from backup (replace) | Preview and an explicit confirmation first; then the ledger is only what the file held; Undo restores the previous ledger exactly | FR-031 |
+| TEST-021 | Erase all data | Customers, entries and screenshots gone; shop settings kept; Undo restores everything | FR-032 |
+| TEST-022 | Statement for one customer | Opening balance, each line's running balance, and a closing balance equal to that customer's current balance | FR-023 |
 | TEST-018 | Statement for a date range | Opening + lines = closing = row balance at range end | FR-023 |
 | TEST-019 | Backup, clear, restore | Identical balances and total | FR-016 |
 

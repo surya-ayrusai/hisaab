@@ -102,38 +102,52 @@ Shop name, customer, period, opening balance, dated lines, closing balance. "Pri
 - Ticket queue `#ticket-queue`: cards with number, question, status badge, priority, age, requested time, replies, and its own `#staff-reply` and `#staff-send`, plus Close.
 - Clinic info editor: one field per knowledge item and language, Save with "Saved · version 4".
 
-## 4. Design tokens (starting proposal)
+## 4. Design system (as built)
+
+Defined once in `src/app/globals.css` as Tailwind theme tokens, so every screen draws from the same set.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Primary | deep teal `#0F5C55` | header, main buttons |
-| Credit / due | warm red `#B3261E` | amounts owed, Udhaar |
-| Payment | green `#1B7F3B` | payments |
-| Surface | off-white `#FAFAF7`, cards white | |
-| Text | `#1C1C1A`; secondary `#5F5F5A` | |
-| Demo band | pale blue-grey `#EEF2F6` | marks the separate module |
-| Type | system font stack; amounts 28–32 px bold tabular; body 16 px | |
-| Radius / spacing | 12 px; 8 px grid | |
-| Touch target | 44 px minimum | |
+| `--color-brand` | deep emerald `#0b4f43` | primary buttons, links, brand gradient |
+| `--color-brand-deep` | `#06302a` | gradient end, footer band |
+| `--color-brand-soft` | `#e7f0ed` | quiet brand surfaces, selected chips |
+| `--color-gold` | muted gold `#b98a2e` | the single accent: date chip, ayrus AI mark, undo |
+| `--color-gold-soft` | `#fbf4e4` | accent surfaces, the date-override banner |
+| `--color-due` | `#b42318` | money owed, credit entries, destructive actions |
+| `--color-due-soft` | `#fef3f2` | due surfaces |
+| `--color-paid` | `#067647` | money received, payment entries |
+| `--color-paid-soft` | `#ecfdf3` | paid surfaces |
+| `--color-ink` / `--color-body` / `--color-muted` / `--color-faint` | `#0c111d` / `#344054` / `#667085` / `#98a2b3` | four steps of text weight |
+| `--color-line` / `--color-hairline` | `#e4e7ec` / `#f2f4f7` | card edges and internal dividers |
+| `--color-surface` / `--color-card` | `#f6f8f7` / `#ffffff` | page behind cards, and the cards |
+| `--radius-card` | 16 px | every card and sheet, 8 px grid elsewhere |
 
-Contrast for text on each colour to be checked at build. Icons always paired with words.
+Utility classes carry the rest: `.card` (radius, hairline ring, one-pixel lift), `.card-raised` (the hero card), `.brand-gradient` (header and footer), `.display-amount` (40 px / 800 weight / tight tracking for the headline figure), `.tnum` (tabular numerals, so columns of money line up), `.hairline-top`, and a `:focus-visible` ring in the brand colour.
+
+**Rules the tokens enforce.** Red is only ever money owed; green is only ever money received; gold is an accent and never a status. The brand colour never states an amount, so a shopkeeper reading quickly cannot confuse a button with a balance. Icons are inline SVG defined in `src/ui/icons.tsx` — no icon library, no remote asset, so the page stays fast and works offline.
+
+**Contrast.** Body text `#344054` on white is 9.3:1; muted `#667085` on white is 5.2:1; white on `#0b4f43` is 10.4:1; `#b42318` on white is 6.6:1; `#067647` on white is 4.9:1. All pass WCAG AA for their sizes. Touch targets stay at 44 px minimum.
 
 ## 5. States
 
 | State | Behaviour |
 | --- | --- |
-| Loading | Skeleton rows; `#total-outstanding` shows only once the figure is computed |
-| Empty | Guidance and one action |
-| Validation error | Message beside field; input kept |
-| Storage full or write failed | "Could not save. Free up space or download a backup." Nothing partially saved |
-| Date override active | Small banner "Showing as if today is 15 Nov 2026" |
+| Loading | "Opening your ledger…"; `#total-outstanding` appears only once the figure is computed |
+| Empty | Guidance and one action (Add customer) |
+| Validation error | Message beside the field; the input is kept |
+| Storage full or write failed | "Could not save. Free up space or try again." Nothing is partially saved |
+| Date override active | Banner "Showing as if today is 15 Nov 2026" |
+| Destructive action | Preview first, explicit confirmation, then an Undo in the toast |
 
 ## 6. Language
 
-Interface in English for this release with Hindi-origin shop words where natural (Udhaar, Khata). Reminder messages in English, Hindi and Telugu. Full Hindi and Telugu interface is a later item.
+English throughout, by owner decision D22 — interface, buttons, reminder messages, statements and errors. The product name HISAAB is the one exception, kept at the client's request. Amounts use Indian digit grouping (11,820) and the rupee sign; the plain, ungrouped number is what sits inside `[data-balance]` for the automated tester.
 
-## 7. Decisions required
+## 7. Decisions taken
 
-1. One scrolling page with the demo band at the bottom (ADR-4), or a different arrangement.
-2. Wording: "Udhaar" and "Payment" as the two button labels.
-3. Colours above as a starting point.
+| # | Decision |
+| --- | --- |
+| 1 | One scrolling page; the ayrus AI band closes it (ADR-4, amended by D23 — no demo band, the assistant module was removed) |
+| 2 | Button labels are "Credit" and "Payment", in English (D22) |
+| 3 | Palette as in section 4, replacing the starting proposal: deep emerald with a muted gold accent |
+| 4 | Secondary views are bottom sheets, not pages, so the ledger is never more than one tap away |

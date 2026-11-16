@@ -10,8 +10,10 @@ Status values: Not started · In progress · Implemented — not tested · Teste
 
 | Ref | What was run |
 | --- | --- |
-| **L** | Local production build, Chrome at 375×812, `npm run test:e2e` — 23 of 23 browser tests passed, plus 61 unit tests. 16 Nov 2026. |
-| **D** | The deployed page at https://hisaab-ayrus3.vercel.app, commit `022315a`, opened in the owner's Chrome and checked through the live DOM. 16 Nov 2026. |
+| **L** | Local production build, Chrome at 375×812, `npm run test:e2e` — 17 of 17 browser tests passed, plus 47 unit tests. Commit `b7cc72f`, 16 Nov 2026. |
+| **D** | The deployed page at https://hisaab-ayrus3.vercel.app, opened in the owner's browser and checked through the live DOM. First at commit `022315a`, re-checked at `b7cc72f` after the theme and Phase 4b work. 16 Nov 2026. |
+
+**Re-check at `b7cc72f`.** The theme rewrite and the Phase 4b features touched every screen, so all six ledger checks were run again on the deployed page. `#total-outstanding`, `[data-customer]` with `[data-balance]`, `a[data-remind]` with a correct `wa.me/91…` link, `#import-box`, `#import-go` and the `?today=` banner are all present and behave as before. The ageing bands summed to the same figure as `#total-outstanding` (₹12,120 in that browser's copy, which holds earlier verification entries), and a customer statement closed at that customer's current balance.
 
 ## A. HISAAB ledger contract (six checks, tracked independently) — all passing
 
