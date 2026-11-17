@@ -117,16 +117,18 @@ Defined once in `src/app/globals.css` as Tailwind theme tokens, so every screen 
 | `--color-due-soft` | `#fef3f2` | due surfaces |
 | `--color-paid` | `#067647` | money received, payment entries |
 | `--color-paid-soft` | `#ecfdf3` | paid surfaces |
-| `--color-ink` / `--color-body` / `--color-muted` / `--color-faint` | `#0c111d` / `#344054` / `#667085` / `#98a2b3` | four steps of text weight |
+| `--color-ink` / `--color-body` / `--color-muted` / `--color-faint` | `#0c111d` / `#344054` / `#5b6878` / `#98a2b3` | four steps of text weight. `--color-faint` is hairlines and decorative glyphs only, never text |
 | `--color-line` / `--color-hairline` | `#e4e7ec` / `#f2f4f7` | card edges and internal dividers |
-| `--color-surface` / `--color-card` | `#f6f8f7` / `#ffffff` | page behind cards, and the cards |
+| `--color-surface` / `--color-card` | `#eef3f0` / `#ffffff` | page behind cards, and the cards |
 | `--radius-card` | 16 px | every card and sheet, 8 px grid elsewhere |
 
 Utility classes carry the rest: `.card` (radius, hairline ring, one-pixel lift), `.card-raised` (the hero card), `.brand-gradient` (header and footer), `.display-amount` (40 px / 800 weight / tight tracking for the headline figure), `.tnum` (tabular numerals, so columns of money line up), `.hairline-top`, and a `:focus-visible` ring in the brand colour.
 
 **Rules the tokens enforce.** Red is only ever money owed; green is only ever money received; gold is an accent and never a status. The brand colour never states an amount, so a shopkeeper reading quickly cannot confuse a button with a balance. Icons are inline SVG defined in `src/ui/icons.tsx` — no icon library, no remote asset, so the page stays fast and works offline.
 
-**Contrast.** Body text `#344054` on white is 9.3:1; muted `#667085` on white is 5.2:1; white on `#0b4f43` is 10.4:1; `#b42318` on white is 6.6:1; `#067647` on white is 4.9:1. All pass WCAG AA for their sizes. Touch targets stay at 44 px minimum.
+**The page field.** The background is not flat. A fixed `body::before` layer carries two brand washes, a warm one and a fine dot grid, so a long customer list scrolls over a still background. It is a pseudo-element rather than `background-attachment: fixed`, which is cheaper and behaves on iOS, and it is hidden in print. Cards stay pure white, so the texture never touches the contrast of anything a shopkeeper reads.
+
+**Contrast.** Measured against both white and the page field. Body text `#344054` is 9.3:1 on white and 9.3:1 on the field; muted `#5b6878` is 5.7:1 and 5.1:1 — it was darkened from `#667085` when the field deepened, which took it from 4.43:1 there to 5.06:1; white on `#0b4f43` is 10.4:1; `#b42318` on white is 6.6:1; `#067647` on white is 4.9:1. All pass WCAG AA for their sizes. Touch targets stay at 44 px minimum.
 
 ## 5. States
 

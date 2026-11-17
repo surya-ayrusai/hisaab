@@ -8,12 +8,12 @@ Severity: **High** — would lose a customer's trust or their data. **Medium** �
 
 | # | Limitation | Severity | Why it is this way | What would fix it |
 | --- | --- | --- | --- | --- |
-| L1 | **The ledger lives in one browser on one device.** It does not sync, and a second phone shows an empty book. | High | Decision ADR-1: no backend means no accounts, no hosting bill and nothing to breach for a product that had to ship in days. | A backend with accounts and sync. This is the single biggest change if the product goes further, and it changes the cost model. |
+| L1 | **Partly addressed 17 Nov.** Opt-in sync over Supabase: a shop is an unguessable uuid, and the same `?shop=` link opens the same ledger on another device. Without that link the app is browser-local as before. Still missing: accounts, so whoever holds the link holds the ledger. | High | ADR-1 kept the ledger local so the product could ship without accounts or a hosting bill; sync was added behind the existing `LedgerRepo` boundary rather than as a rewrite. | Accounts and row-level security per shop. Until then the link is the credential and must be treated as one. |
 | L2 | **Clearing browser data erases the ledger.** So does uninstalling the browser, and some "cleaner" apps do it on a schedule. | High | Follows from L1. | Backups mitigate it today: Settings offers a download, and the storage notice on the home page says so. Sync would remove it. |
 | L3 | **Backups do not include payment screenshots.** Customers and entries restore exactly; images do not. | Medium | Images are blobs that would bloat a JSON file far past what a phone can hold in memory while parsing. | A zip export, or image upload once there is a backend. Stated in the Settings sheet so nobody is surprised. |
 | L4 | **No multi-user access.** One shopkeeper, one device. A second person cannot keep the same book. | Medium | Follows from L1. | Accounts. |
 | L5 | **No reminder is sent automatically.** HISAAB opens WhatsApp with the message ready; the shopkeeper presses send. | Low | Deliberate (owner decision D5 and the strategy doc): automatic messages from an unknown number are how a shop loses a customer, and WhatsApp's terms do not permit it from a click-to-chat link anyway. | The WhatsApp Business API, which needs a verified business and per-message cost. |
-| L6 | **There is no reminder link for a customer with nothing due.** | Low | Owner decision D5. A reminder with no amount is noise. | Nothing to fix; it is intended. |
+| L6 | ~~No reminder link for a customer with nothing due.~~ **Closed 17 Nov** (D25). Every customer with a usable number has a link; the message changes with the balance, so a settled customer is thanked rather than asked for Rs 0. | — | The client's criteria ask for a button per customer; D5's intent was never to hide the button, only to avoid a meaningless demand. | Done. |
 | L7 | **Entries are corrected by cancelling, never deleting.** A cancelled entry stays visible and stops counting. | Low | Decision D11. A ledger that can silently lose a row is not a ledger. | Nothing to fix; it is intended. Users expecting a delete button need one sentence of explanation. |
 | L8 | **English only.** | Medium | Owner decision D20. The name HISAAB stays at the client's request. | Interface translation plus multilingual reminder templates. The reminder builder already takes a tone, so a language axis is a small change; the interface is the larger piece. |
 
@@ -43,7 +43,7 @@ Owner decision D17 covers the first three.
 
 ## 5. What we would do first with more time
 
-1. **Sync and accounts** (L1, L2, L4). Everything else is a detail next to this.
+1. **Accounts** (L1, L4). Sync exists now, but the link is the only credential. Proper sign-in and per-shop row-level security is the next step and the one that makes this sellable.
 2. **A home-screen install** so the shop opens HISAAB like an app rather than a link.
 3. **Interest and due dates**, which is the most common paid feature in the competitors.
 4. **Interface translation** (L8), starting with the languages the first shops actually use.

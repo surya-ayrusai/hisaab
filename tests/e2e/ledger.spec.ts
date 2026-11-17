@@ -32,7 +32,7 @@ test("TC-L1, TC-L2: first load shows the sample shop with correct total and rows
   await expect(page.locator("#total-outstanding")).toContainText("Rs 11,820");
 });
 
-test("TC-L3: reminder links follow the contract and only exist where there is a due", async ({ page }) => {
+test("TC-L3: every customer has a reminder link, and the message matches the balance", async ({ page }) => {
   await open(page);
   for (const [phone, balance] of Object.entries(expected.balances) as [string, number][]) {
     const link = page.locator(`a[data-remind="${phone}"]`);
@@ -43,13 +43,33 @@ test("TC-L3: reminder links follow the contract and only exist where there is a 
     expect(message).toContain("Lakshmi Provision Store");
     expect(message.replace(/,/g, "")).toContain(String(balance));
   }
-  // Pay off one customer in full: the link must disappear.
+  // Pay one customer off in full: the link stays, but it stops asking for money.
   const row = page.locator('[data-customer="9000000107"]');
   await row.getByRole("button", { name: "Payment" }).click();
   await page.locator("#entry-amount").fill("250");
   await page.getByRole("button", { name: /Save payment/ }).click();
   await expect(row.locator("[data-balance]")).toHaveText("0");
-  await expect(page.locator('a[data-remind="9000000107"]')).toHaveCount(0);
+
+  const settled = page.locator('a[data-remind="9000000107"]');
+  await expect(settled).toHaveCount(1);
+  const cleared = new URL((await settled.getAttribute("href"))!).searchParams.get("text")!;
+  // "nothing is pending" is fine; a demand for money is not.
+  const DEMAND = /please pay|kindly clear|request you|pay when|balance is Rs|pending in your account/i;
+  expect(cleared).toMatch(/clear|settled/i);
+  expect(cleared).not.toMatch(DEMAND);
+  expect(cleared).not.toMatch(/Rs\s*0\b/);
+
+  // Overpay another: the message reports the advance, not a debt.
+  const advanceRow = page.locator('[data-customer="9000000105"]');
+  await advanceRow.getByRole("button", { name: "Payment" }).click();
+  await page.locator("#entry-amount").fill("500");
+  await page.getByRole("button", { name: /Save payment/ }).click();
+  await expect(advanceRow.locator("[data-balance]")).toHaveText("-270");
+  const advance = new URL((await page.locator('a[data-remind="9000000105"]').getAttribute("href"))!)
+    .searchParams.get("text")!;
+  expect(advance).toContain("270");
+  expect(advance).not.toContain("-270");
+  expect(advance).not.toMatch(DEMAND);
 });
 
 test("TC-L4: paste and one press imports; same file again changes nothing", async ({ page }) => {

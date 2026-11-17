@@ -180,7 +180,7 @@ export function CustomerDetailSheet({
             className={`${secondaryButton} flex-1 text-paid`}
           >
             <WhatsAppIcon className="h-5 w-5" />
-            Remind
+            {balance > 0 ? "Remind" : "Message"}
           </a>
         )}
         <button type="button" onClick={onStatement} className={`${secondaryButton} flex-1`}>

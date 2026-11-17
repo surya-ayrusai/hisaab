@@ -8,12 +8,12 @@
 @theme inline {
   --color-ink: #0c111d;
   --color-body: #344054;
-  --color-muted: #667085;
+  --color-muted: #5b6878;
   /* Hairlines, dividers and decorative glyphs only — never text. */
   --color-faint: #98a2b3;
   --color-line: #e4e7ec;
   --color-hairline: #f2f4f7;
-  --color-surface: #f6f8f7;
+  --color-surface: #eef3f0;
   --color-card: #ffffff;
 
   --color-brand: #0b4f43;
@@ -39,9 +39,31 @@ html {
 }
 
 body {
-  background: var(--color-surface);
+  background-color: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-sans);
+}
+
+/**
+ * The page sits on a soft, tinted field rather than flat white: two brand
+ * washes, a warm one, and a fine dot grid for texture. It lives on a fixed
+ * pseudo-element so a long customer list scrolls over a still background,
+ * which is cheaper than background-attachment: fixed and behaves on iOS.
+ * Cards stay pure white, so nothing here touches text contrast.
+ */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(44rem 30rem at 108% -8%, rgb(11 79 67 / 0.1), transparent 62%),
+    radial-gradient(32rem 24rem at -12% 14%, rgb(185 138 46 / 0.09), transparent 60%),
+    radial-gradient(40rem 28rem at 55% 112%, rgb(11 79 67 / 0.07), transparent 64%),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><circle cx='1.2' cy='1.2' r='1.2' fill='%230b4f43' fill-opacity='0.055'/></svg>");
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
 }
 
 /** Reserved for the HISAAB wordmark; the file holds capitals only. */
@@ -129,5 +151,8 @@ button {
   }
   .no-print {
     display: none !important;
+  }
+  body::before {
+    display: none;
   }
 }

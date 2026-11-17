@@ -209,10 +209,50 @@ describe("WhatsApp reminder", () => {
       expect(buildReminderMessage({ ...input, tone })).toMatch(/^[\x20-\x7E]+$/);
     }
   });
-  it("offers no link without a due or with a bad number", () => {
-    expect(buildWhatsAppUrl("9000000102", { ...input, balancePaise: 0 })).toBeNull();
-    expect(buildWhatsAppUrl("9000000102", { ...input, balancePaise: -500 })).toBeNull();
+  it("offers a link for every usable number, whatever the balance", () => {
+    expect(buildWhatsAppUrl("9000000102", { ...input, balancePaise: 0 })).not.toBeNull();
+    expect(buildWhatsAppUrl("9000000102", { ...input, balancePaise: -500 })).not.toBeNull();
+  });
+
+  it("offers no link when the number cannot receive WhatsApp", () => {
     expect(buildWhatsAppUrl("12345", input)).toBeNull();
+    expect(buildWhatsAppUrl("1234567890", input)).toBeNull();
+    expect(buildWhatsAppUrl("", input)).toBeNull();
+  });
+
+  /**
+   * A settled customer must never be asked for money. "Nothing is pending" is
+   * fine; a demand is not, and neither is an amount of Rs 0.
+   */
+  const DEMAND = /please pay|kindly clear|request you|pay when|is outstanding|balance is Rs|pending in your account/i;
+
+  it("never asks for money when nothing is owed", () => {
+    for (const tone of ["friendly", "polite", "formal"] as const) {
+      const clear = buildReminderMessage({ ...input, tone, balancePaise: 0 });
+      expect(clear, tone).toContain("Sunita Devi");
+      expect(clear, tone).toContain("Lakshmi Provision Store");
+      expect(clear, tone).toMatch(/clear|settled/i);
+      expect(clear, tone).not.toMatch(DEMAND);
+      expect(clear, tone).not.toMatch(/Rs\s*0\b/);
+    }
+  });
+
+  it("tells a customer in credit what stands in their favour, and asks for nothing", () => {
+    for (const tone of ["friendly", "polite", "formal"] as const) {
+      const advance = buildReminderMessage({ ...input, tone, balancePaise: -50000 });
+      expect(advance, tone).toContain("500");
+      expect(advance, tone).not.toContain("-500");
+      expect(advance, tone).toMatch(/favour/i);
+      expect(advance, tone).not.toMatch(DEMAND);
+    }
+  });
+
+  it("still asks plainly when money is genuinely owed", () => {
+    for (const tone of ["friendly", "polite", "formal"] as const) {
+      const due = buildReminderMessage({ ...input, tone, balancePaise: 347000 });
+      expect(due, tone).toMatch(DEMAND);
+      expect(due, tone).toContain("3,470");
+    }
   });
 });
 
