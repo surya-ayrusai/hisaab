@@ -667,7 +667,15 @@ export function SettingsSheet({
   }
 
   async function eraseAll() {
-    if (!window.confirm(`Erase all ${customerCount} customers and every entry? Download a backup first if you need one.`)) return;
+    /*
+     * When sync is on this is not a local action. The erase is pushed up a
+     * moment later, so every device opening the same link loses the ledger
+     * too, and the Undo lives only on this device. Say so before, not after.
+     */
+    const warning = sync.shopId
+      ? `Erase all ${customerCount} customers and every entry?\n\nSync is on, so this erases the ledger on EVERY device using your sync link, not just this one. The Undo button only works on this device.\n\nDownload a backup first if you need one.`
+      : `Erase all ${customerCount} customers and every entry? Download a backup first if you need one.`;
+    if (!window.confirm(warning)) return;
     const snapshot = await repo.eraseAll();
     onRestored("Everything was erased.", snapshot);
   }
@@ -761,6 +769,7 @@ export function SettingsSheet({
               <p className="mt-1 text-sm text-body">
                 The backup holds {pending.summary}. Your current {customerCount} customers and all their entries will be
                 removed. You can undo this straight afterwards.
+                {sync.shopId ? " Sync is on, so this replaces the ledger on every device using your sync link." : ""}
               </p>
               <label className="mt-2 flex items-start gap-2 text-sm font-semibold">
                 <input

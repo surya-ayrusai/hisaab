@@ -25,6 +25,7 @@ Severity: **High** â€” would lose a customer's trust or their data. **Medium** â
 | T2 | **Storage can fill up.** A phone low on space can refuse a write, especially with screenshots. | Medium | Every write is in a transaction, so a failure saves nothing partial, and the message says to free up space. Images are downscaled to 1600 px and re-encoded before storage. |
 | T3 | **A very large book slows the first paint.** At 2,000 customers the list takes about 1.7 s to appear, because every customer must be in the page. | Low | Measured, and far above any realistic shop. Not virtualised on purpose: the tester contract requires one `[data-customer]` element per customer. |
 | T4 | **Private browsing may block storage.** Some browsers refuse IndexedDB in private mode. | Low | The load error is shown plainly rather than failing silently. |
+| T6 | **Erasing or restoring on one device changes every device on the link.** Sync pushes the result up a moment later, and the Undo exists only on the device that did it. | Medium | Both actions now say so before they run: the erase confirmation names it in capitals, and the restore preview adds a line. Found by testing the live round-trip, not by reading the code. |
 | T5 | **An import of a hand-edited file can carry odd data.** | Low | Every row is validated before anything is written, the whole payload is planned before the first write, rejected rows are listed with reasons, and the import is undoable. Caps: 5,000 customers, 100,000 entries, 10 MB of text. |
 
 ## 3. Known departures from the master prompt

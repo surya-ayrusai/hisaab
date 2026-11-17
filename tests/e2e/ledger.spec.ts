@@ -317,3 +317,20 @@ test("sync: an unusable shop parameter is ignored rather than breaking the page"
   await expect(page.locator("#total-outstanding")).toContainText("11,820");
   await expect(page.locator("[data-sync-status]")).toHaveCount(0);
 });
+
+test("erasing warns that it is local-only when sync is off", async ({ page }) => {
+  await open(page);
+  let message = "";
+  page.once("dialog", (d) => {
+    message = d.message();
+    return d.dismiss();
+  });
+  await page.click('button[aria-label="Settings and data"]');
+  await page.getByRole("button", { name: "Erase all data" }).click();
+  await expect.poll(() => message).toContain("Erase all 8 customers");
+  // Without sync there is nothing to say about other devices.
+  expect(message).not.toContain("EVERY device");
+  // Dismissed, so nothing was erased.
+  await page.click("[role=dialog] button[aria-label=Close]");
+  await expect(page.locator("[data-customer]")).toHaveCount(8);
+});
