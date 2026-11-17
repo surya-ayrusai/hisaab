@@ -509,10 +509,6 @@ export function LedgerApp() {
           )}
         </section>
 
-        <p className="mt-5 text-sm text-muted">
-          Your ledger is stored only in this browser on this device. It is not saved on any server and will not appear on
-          another phone. Clearing browser data will erase it, so download a backup from Settings.
-        </p>
       </main>
 
       {sheet.kind === "add-customer" && (
