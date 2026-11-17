@@ -191,16 +191,29 @@ grant execute on function public.hisaab_push(uuid, text, jsonb, jsonb) to anon, 
 
 -- An earlier version of this file put the tables in public. Clear those away,
 -- but only if they are empty, so a ledger that is already stored is never lost.
+--
+-- The checks use EXECUTE on purpose. PL/pgSQL plans a whole boolean expression
+-- as one query, so writing `if to_regclass(...) is not null and not exists
+-- (select 1 from public.hisaab_shops)` fails to parse on a database where that
+-- table has never existed. Dynamic SQL is not planned until it is reached.
 do $$
+declare
+  v_rows bigint;
 begin
-  if to_regclass('public.hisaab_shops') is not null
-     and not exists (select 1 from public.hisaab_shops)
-  then
-    drop table if exists public.hisaab_entries cascade;
-    drop table if exists public.hisaab_customers cascade;
-    drop table if exists public.hisaab_shops cascade;
-    raise notice 'Removed the empty tables left in public by the earlier version.';
+  if to_regclass('public.hisaab_shops') is null then
+    return;
   end if;
+
+  execute 'select count(*) from public.hisaab_shops' into v_rows;
+  if v_rows > 0 then
+    raise notice 'Left the tables in public alone: they hold % shop row(s).', v_rows;
+    return;
+  end if;
+
+  execute 'drop table if exists public.hisaab_entries cascade';
+  execute 'drop table if exists public.hisaab_customers cascade';
+  execute 'drop table if exists public.hisaab_shops cascade';
+  raise notice 'Removed the empty tables left in public by the earlier version.';
 end
 $$;
 
