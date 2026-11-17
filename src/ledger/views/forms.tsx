@@ -31,6 +31,7 @@ export function AddCustomerSheet({
   const [showOpening, setShowOpening] = useState(false);
   const [openingAmount, setOpeningAmount] = useState("");
   const [openingDate, setOpeningDate] = useState(today);
+  const [openingNote, setOpeningNote] = useState("");
   const [nameError, setNameError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [openingError, setOpeningError] = useState("");
@@ -57,7 +58,7 @@ export function AddCustomerSheet({
       bad = true;
     }
 
-    let opening: { amountPaise: number; date: string } | undefined;
+    let opening: { amountPaise: number; date: string; note?: string } | undefined;
     if (showOpening && openingAmount.trim() !== "") {
       const paise = parseRupeesToPaise(openingAmount);
       if (paise === null) {
@@ -67,7 +68,7 @@ export function AddCustomerSheet({
         setOpeningError("Choose a valid date.");
         bad = true;
       } else {
-        opening = { amountPaise: paise, date: openingDate };
+        opening = { amountPaise: paise, date: openingDate, note: openingNote };
       }
     }
     if (bad || !cleanPhone) return;
@@ -174,6 +175,21 @@ export function AddCustomerSheet({
                   onChange={(e) => setOpeningDate(e.target.value)}
                 />
               </div>
+            </div>
+          )}
+          {showOpening && (
+            <div className="mt-3">
+              <label htmlFor="opening-note" className={labelClass}>
+                Note <span className="font-normal text-muted">(optional)</span>
+              </label>
+              <input
+                id="opening-note"
+                className={inputClass}
+                value={openingNote}
+                maxLength={80}
+                placeholder="old khata book"
+                onChange={(e) => setOpeningNote(e.target.value)}
+              />
             </div>
           )}
           {openingError && <p className={errorClass}>{openingError}</p>}

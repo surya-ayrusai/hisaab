@@ -239,13 +239,17 @@ test("opening balance: a new customer can carry a balance over from the notebook
   await page.getByText("This customer already owes money").click();
   await page.locator("#opening-amount").fill("1500");
   await page.locator("#opening-date").fill("2026-09-01");
+  await page.locator("#opening-note").fill("old khata book");
   await page.getByRole("button", { name: "Save customer" }).click();
 
   const row = page.locator('[data-customer="9876501234"]');
   await expect(row.locator("[data-balance]")).toHaveText("1500");
   await expect(page.locator("#total-outstanding")).toContainText("13,320");
-  await row.getByRole("button", { name: "Credit" }).first().click();
-  await page.getByRole("button", { name: "Close" }).click();
+  // The note the shopkeeper typed shows against the opening entry.
+  await row.locator("button").first().click();
+  await expect(page.locator("[role=dialog]")).toContainText("old khata book");
+  await expect(page.locator("[role=dialog]")).toContainText("opening balance");
+  await page.click("[role=dialog] button[aria-label=Close]");
 });
 
 test("dues by age: bands, total and the oldest customer first", async ({ page }) => {

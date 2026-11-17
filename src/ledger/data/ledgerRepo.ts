@@ -84,7 +84,7 @@ export class LedgerRepo {
     phone: string;
     notes?: string;
     /** Carried over from a paper ledger; stored as one entry so it is counted once. */
-    opening?: { amountPaise: number; date: string };
+    opening?: { amountPaise: number; date: string; note?: string };
   }): Promise<CustomerRecord> {
     const name = input.name.trim();
     if (name.length < 1 || name.length > 60) throw new LedgerError("invalid-name", "Enter the customer's name.");
@@ -113,6 +113,9 @@ export class LedgerRepo {
       };
       await this.db.customers.add(record);
       if (input.opening) {
+        // The shopkeeper's own words if they gave any, so the history says
+        // where the figure came from; otherwise a plain default.
+        const note = (input.opening.note ?? "").trim().slice(0, 80) || "Opening balance";
         await this.db.entries.add({
           id: newId("e"),
           customerId: record.id,
@@ -120,7 +123,7 @@ export class LedgerRepo {
           kind: "opening",
           amountPaise: input.opening.amountPaise,
           date: input.opening.date,
-          note: "Opening balance",
+          note,
           status: "active",
           source: "manual",
           importKey: entryFingerprint({
@@ -128,7 +131,7 @@ export class LedgerRepo {
             type: "credit",
             amountPaise: input.opening.amountPaise,
             date: input.opening.date,
-            note: "Opening balance",
+            note,
           }),
           createdAt: now,
         });

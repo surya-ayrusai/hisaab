@@ -179,6 +179,35 @@ describe("opening balance", () => {
     await repo.addCustomer({ name: "Fresh", phone: "9812345671" });
     expect(await repo.listEntries()).toHaveLength(0);
   });
+
+  it("keeps the shopkeeper's own note, so the history says where the figure came from", async () => {
+    await repo.addCustomer({
+      name: "Noted",
+      phone: "9812345672",
+      opening: { amountPaise: 90000, date: "2026-09-15", note: "  old khata book  " },
+    });
+    const [entry] = await repo.listEntries();
+    expect(entry.note).toBe("old khata book");
+    expect(entry.kind).toBe("opening");
+  });
+
+  it("falls back to a plain label when no note is given", async () => {
+    await repo.addCustomer({
+      name: "Blank",
+      phone: "9812345673",
+      opening: { amountPaise: 90000, date: "2026-09-15", note: "   " },
+    });
+    expect((await repo.listEntries())[0].note).toBe("Opening balance");
+  });
+
+  it("trims a very long note to the same limit as any other entry", async () => {
+    await repo.addCustomer({
+      name: "Longform",
+      phone: "9812345674",
+      opening: { amountPaise: 90000, date: "2026-09-15", note: "x".repeat(200) },
+    });
+    expect((await repo.listEntries())[0].note).toHaveLength(80);
+  });
 });
 
 describe("backup and restore", () => {

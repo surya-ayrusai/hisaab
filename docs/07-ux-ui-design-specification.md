@@ -54,7 +54,7 @@ Everything beyond the home page is a bottom sheet, so the ledger is never more t
 
 ### 3.2 Add customer (sheet)
 
-Name and mobile number (numeric keypad). A tick box, "This customer already owes money", reveals an opening amount and the date it has been owed since; it is written as a single `kind: "opening"` credit entry so it is counted once and shows in the history (FR-024). A duplicate phone shows the existing customer with "Open".
+Name and mobile number (numeric keypad). A tick box, "This customer already owes money", reveals an opening amount, the date it has been owed since, and an optional note — the same three fields the entry form offers, because carrying a figure over from a paper khata deserves the same explanation as any other credit. It is written as a single `kind: "opening"` credit entry so it is counted once and shows in the history (FR-024); with no note it reads "Opening balance". A duplicate phone shows the existing customer with "Open".
 
 ### 3.3 Entry form (sheet) — the payment form
 
